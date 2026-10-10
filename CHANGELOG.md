@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Add configurable schema_ui form messages for localization, including optional
+  labels, actions, validation diagnostics, and custom editor integration.
+
 * Remove duplicate labels from schema_ui boolean fields while retaining helper
   text and validation errors.
 

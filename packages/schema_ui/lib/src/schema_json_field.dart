@@ -30,7 +30,7 @@ class _SchemaJsonField extends StatelessWidget {
       try {
         field.onChanged(decodeJson(text));
       } on FormatException {
-        field.setInputError('Enter valid JSON.');
+        field._setInputMessage((messages) => messages.invalidJsonError);
       }
     },
   );

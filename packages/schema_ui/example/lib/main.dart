@@ -8,7 +8,10 @@ void main() => runApp(const ExampleApp());
 /// Demonstrates default editors and a customized string field.
 class ExampleApp extends StatelessWidget {
   /// Creates the sample application.
-  const ExampleApp({super.key});
+  const ExampleApp({super.key, this.messages = const SchemaFormMessages()});
+
+  /// Messages shared by generated fields and the customized biography editor.
+  final SchemaFormMessages messages;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -24,12 +27,14 @@ class ExampleApp extends StatelessWidget {
       ),
       extensions: const [SchemaUiTheme(spacing: 12)],
     ),
-    home: const _EditorScreen(),
+    home: _EditorScreen(messages: messages),
   );
 }
 
 class _EditorScreen extends StatefulWidget {
-  const _EditorScreen();
+  const _EditorScreen({required this.messages});
+
+  final SchemaFormMessages messages;
 
   @override
   State<_EditorScreen> createState() => _EditorScreenState();
@@ -79,6 +84,7 @@ class _EditorScreenState extends State<_EditorScreen> {
           children: [
             SchemaForm(
               schema: _document,
+              messages: widget.messages,
               options: _options,
               initialValue: const {
                 'name': 'Example',
@@ -131,9 +137,7 @@ class _EditorScreenState extends State<_EditorScreen> {
         initialValue: field.value as String?,
         enabled: field.enabled,
         autovalidateMode: field.autovalidateMode,
-        decoration: InputDecoration(
-          labelText: field.isRequired ? 'Biography' : 'Biography (optional)',
-        ),
+        decoration: InputDecoration(labelText: field.label),
         minLines: 3,
         maxLines: null,
         validator: field.validator,

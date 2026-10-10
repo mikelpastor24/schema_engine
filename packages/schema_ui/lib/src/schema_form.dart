@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:schema_engine/schema_engine.dart';
 
+import 'schema_form_messages.dart';
 import 'schema_ui_theme.dart';
 
 part 'schema_json_field.dart';
@@ -26,8 +27,11 @@ final class SchemaField {
     this._errorText,
     this._errors,
     this._setInvalidInput,
+    this._setInputMessage,
     this._clearValue, {
     required this.schema,
+    required this.label,
+    required this.messages,
     required this.instancePath,
     required this.value,
     required this.isPresent,
@@ -43,6 +47,12 @@ final class SchemaField {
   /// References remain relative to the original document. Validation uses the
   /// compiled root document rather than compiling this fragment in isolation.
   final JsonSchema schema;
+
+  /// The display label, including the localized optional marker when applicable.
+  final String label;
+
+  /// The current form messages, also available to custom editors.
+  final SchemaFormMessages messages;
 
   /// The field's escaped JSON Pointer; an empty string identifies the root.
   final String instancePath;
@@ -79,7 +89,9 @@ final class SchemaField {
 
   final String? Function() _errorText;
   final List<ValidationError> Function() _errors;
-  final void Function(String text, String parsingMessage) _setInvalidInput;
+  final void Function(String text, FormatException error) _setInvalidInput;
+  final ValueChanged<String Function(SchemaFormMessages messages)?>
+  _setInputMessage;
   final void Function({required bool resetEditor}) _clearValue;
 
   /// Omits this optional property and resets its editor to the empty state.
@@ -153,6 +165,7 @@ final class SchemaForm extends StatefulWidget {
     this.autovalidateMode = AutovalidateMode.disabled,
     this.typeBuilders = const {},
     this.pathBuilders = const {},
+    this.messages = const SchemaFormMessages(),
   });
 
   /// The schema document used for presentation and validation.
@@ -188,6 +201,12 @@ final class SchemaForm extends StatefulWidget {
   /// Custom editors by escaped instance JSON Pointer, including the root `''`.
   final Map<String, SchemaWidgetBuilder> pathBuilders;
 
+  /// Localizable labels, action text, parsing errors, and schema diagnostics.
+  ///
+  /// Defaults to English. Message changes preserve the edited instance and
+  /// pending input; they do not recompile the schema or reset the form.
+  final SchemaFormMessages messages;
+
   @override
   State<SchemaForm> createState() => _SchemaFormState();
 }
@@ -199,11 +218,13 @@ class _SchemaFormState extends State<SchemaForm> {
   Object? _value;
   Object? _initial;
   List<ValidationError>? _errors;
-  final _inputErrors = <String, String>{};
-  final _invalidInputs = <String, ({String text, String parsingMessage})>{};
+  final _inputErrors = <String, String Function(SchemaFormMessages)>{};
+  final _invalidInputs = <String, ({String text, FormatException error})>{};
   final _versions = <String, int>{};
   var _generation = 0;
   var _resetting = false;
+
+  SchemaFormMessages get _messages => widget.messages;
 
   @override
   void initState() {
@@ -259,26 +280,30 @@ class _SchemaFormState extends State<SchemaForm> {
   String? _rootError() {
     if (_inputErrors.isNotEmpty) {
       final entry = _inputErrors.entries.first;
-      return '${entry.key.isEmpty ? '/' : entry.key}: ${entry.value}';
+      return _messages.errorSummary(entry.key, entry.value(_messages));
     }
     final errors = _diagnostics;
     if (errors.isEmpty) {
       if (_invalidInputs.isNotEmpty) {
         final entry = _invalidInputs.entries.first;
-        return '${entry.key.isEmpty ? '/' : entry.key}: '
-            '${entry.value.parsingMessage}';
+        return _messages.errorSummary(
+          entry.key,
+          _messages.numberInputError(entry.value.error),
+        );
       }
       return null;
     }
     final first = errors.first;
-    return '${first.instancePath.isEmpty ? '/' : first.instancePath}: '
-        '${first.message}';
+    return _messages.errorSummary(
+      first.instancePath,
+      _messages.validationError(first),
+    );
   }
 
   String? _fieldError(String path, {required bool isRequired}) {
     final inputError = _inputErrors[path];
     if (inputError != null) {
-      return inputError;
+      return inputError(_messages);
     }
     if (isRequired && identical(_at(_value, path), _absent)) {
       final parent = path.substring(0, path.lastIndexOf('/'));
@@ -287,15 +312,18 @@ class _SchemaFormState extends State<SchemaForm> {
             error.instancePath == parent &&
             (error.keyword == 'required' || error.keyword == 'optional'),
       )) {
-        return 'This property is required.';
+        return _messages.requiredPropertyError;
       }
     }
     for (final error in _diagnostics) {
       if (error.instancePath == path) {
-        return error.message;
+        return _messages.validationError(error);
       }
     }
-    return _invalidInputs[path]?.parsingMessage;
+    final invalidInput = _invalidInputs[path];
+    return invalidInput == null
+        ? null
+        : _messages.numberInputError(invalidInput.error);
   }
 
   void _change(
@@ -365,7 +393,7 @@ class _SchemaFormState extends State<SchemaForm> {
     }
   }
 
-  void _setInputError(String path, String? error) {
+  void _setInputError(String path, String Function(SchemaFormMessages)? error) {
     if (!widget.enabled || _resetting) {
       return;
     }
@@ -382,12 +410,12 @@ class _SchemaFormState extends State<SchemaForm> {
     _rootKey.currentState?.didChange(_value);
   }
 
-  void _setInvalidInput(String path, String text, String parsingMessage) {
+  void _setInvalidInput(String path, String text, FormatException error) {
     if (!widget.enabled || _resetting) {
       return;
     }
     setState(() {
-      _invalidInputs[path] = (text: text, parsingMessage: parsingMessage);
+      _invalidInputs[path] = (text: text, error: error);
       _inputErrors.remove(path);
       _errors = null;
     });
@@ -471,9 +499,14 @@ class _SchemaFormState extends State<SchemaForm> {
       () => List.unmodifiable(
         _diagnostics.where((error) => error.instancePath == path),
       ),
-      (text, parsingMessage) {
+      (text, error) {
         if (enabled) {
-          _setInvalidInput(path, text, parsingMessage);
+          _setInvalidInput(path, text, error);
+        }
+      },
+      (message) {
+        if (enabled) {
+          _setInputError(path, message);
         }
       },
       ({required bool resetEditor}) {
@@ -482,6 +515,10 @@ class _SchemaFormState extends State<SchemaForm> {
         }
       },
       schema: plan.schema,
+      label: isRequired
+          ? _label(plan, path)
+          : _messages.optionalLabel(_label(plan, path)),
+      messages: _messages,
       instancePath: path,
       value: value,
       isPresent: present,
@@ -502,7 +539,7 @@ class _SchemaFormState extends State<SchemaForm> {
       },
       setInputError: (error) {
         if (enabled) {
-          _setInputError(path, error);
+          _setInputError(path, error == null ? null : (_) => error);
         }
       },
     );
@@ -547,14 +584,10 @@ class _SchemaFormState extends State<SchemaForm> {
 
   String _label(_Plan plan, String path) =>
       plan.attributes['title'] as String? ??
-      (path.isEmpty ? 'Value' : _segments(path).last);
-
-  String _fieldLabel(_Plan plan, SchemaField field) =>
-      '${_label(plan, field.instancePath)}'
-      '${field.isRequired ? '' : ' (optional)'}';
+      (path.isEmpty ? _messages.valueLabel : _segments(path).last);
 
   InputDecoration _decoration(_Plan plan, SchemaField field) => InputDecoration(
-    labelText: _fieldLabel(plan, field),
+    labelText: field.label,
     helperText: plan.attributes['description'] as String?,
   );
 
@@ -590,7 +623,7 @@ class _SchemaFormState extends State<SchemaForm> {
       ),
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text(_fieldLabel(plan, field)),
+        title: Text(field.label),
         value: field.value == true,
         onChanged: field.enabled
             ? (value) {
@@ -645,7 +678,7 @@ class _SchemaFormState extends State<SchemaForm> {
     children: [
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text('Use null for ${_fieldLabel(plan, field)}'),
+        title: Text(_messages.useNullLabel(field.label)),
         value: field.isPresent && field.value == null,
         onChanged: field.enabled
             ? (useNull) => _change(
@@ -676,10 +709,7 @@ class _SchemaFormState extends State<SchemaForm> {
     builder: (state) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          _fieldLabel(plan, field),
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text(field.label, style: Theme.of(context).textTheme.titleMedium),
         if (plan.attributes['description'] case final String description)
           Text(description, style: Theme.of(context).textTheme.bodySmall),
         for (final child in children)
@@ -746,7 +776,7 @@ class _SchemaFormState extends State<SchemaForm> {
         Expanded(child: editor),
         if (hasInput)
           IconButton(
-            tooltip: 'Clear ${_label(plan, path)}',
+            tooltip: _messages.clearValueTooltip(_label(plan, path)),
             icon: const Icon(Icons.clear),
             onPressed: field.enabled && plan.attributes['readOnly'] != true
                 ? () => _change(path, _absent, structure: true)
@@ -766,8 +796,8 @@ class _SchemaFormState extends State<SchemaForm> {
     return TextFormField(
       initialValue: encodeJson(additional, indent: '  '),
       enabled: field.enabled,
-      decoration: const InputDecoration(
-        labelText: 'Additional properties (JSON)',
+      decoration: InputDecoration(
+        labelText: _messages.additionalPropertiesLabel,
       ),
       minLines: 3,
       maxLines: null,
@@ -784,8 +814,8 @@ class _SchemaFormState extends State<SchemaForm> {
               : decodeJson(text);
           if (decoded is! Map<String, Object?> ||
               decoded.keys.any(plan.properties.containsKey)) {
-            field.setInputError(
-              'Enter a JSON object with additional keys only.',
+            field._setInputMessage(
+              (messages) => messages.invalidAdditionalPropertiesError,
             );
             return;
           }
@@ -806,7 +836,7 @@ class _SchemaFormState extends State<SchemaForm> {
             clearDescendantErrors: false,
           );
         } on FormatException {
-          field.setInputError('Enter valid JSON.');
+          field._setInputMessage((messages) => messages.invalidJsonError);
         }
       },
     );
@@ -829,7 +859,7 @@ class _SchemaFormState extends State<SchemaForm> {
             Align(
               alignment: AlignmentDirectional.centerEnd,
               child: IconButton(
-                tooltip: 'Remove item ${index + 1}',
+                tooltip: _messages.removeItemTooltip(index + 1),
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: field.enabled
                     ? () => _change(
@@ -848,7 +878,7 @@ class _SchemaFormState extends State<SchemaForm> {
         alignment: AlignmentDirectional.centerStart,
         child: OutlinedButton.icon(
           icon: const Icon(Icons.add),
-          label: const Text('Add item'),
+          label: Text(_messages.addItemLabel),
           onPressed: field.enabled
               ? () => _change(field.instancePath, [
                   ...items,

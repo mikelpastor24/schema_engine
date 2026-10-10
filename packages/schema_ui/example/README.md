@@ -53,6 +53,12 @@ restore the initial instance. Editing after a successful save clears the
 displayed JSON until the next valid submission. The screen follows the system's
 light/dark theme.
 
+`ExampleApp` accepts `messages: SchemaFormMessages(...)` to customize or
+translate form text. The biography override uses `field.label` so its optional
+marker follows the same configuration as the default editors. See
+[form localization](../README.md#localize-form-messages) for the available
+messages and integration with an application's localization system.
+
 ## Checks
 
 From this application directory:

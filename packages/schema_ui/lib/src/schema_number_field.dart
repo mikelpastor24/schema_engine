@@ -72,7 +72,7 @@ class _SchemaNumberFieldState extends State<_SchemaNumberField> {
       }
       widget.field.onChanged(decoded);
     } on FormatException catch (error) {
-      widget.field._setInvalidInput(text, error.message);
+      widget.field._setInvalidInput(text, error);
     }
   }
 }

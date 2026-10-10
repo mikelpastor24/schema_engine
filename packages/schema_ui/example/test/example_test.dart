@@ -28,6 +28,28 @@ Future<void> _save(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'example shares optional labels with its custom biography editor',
+    (tester) async {
+      await tester.pumpWidget(
+        ExampleApp(
+          messages: SchemaFormMessages(
+            optionalLabel: (label) => '$label (not required)',
+          ),
+        ),
+      );
+      final biography = _textField('Biography (not required)');
+      expect(biography, findsOneWidget);
+      expect(_textField('Email (not required)'), findsOneWidget);
+      await tester.enterText(biography, 'Localized custom editor.');
+      await _save(tester);
+      expect(
+        tester.widget<SelectableText>(find.byType(SelectableText)).data,
+        contains('"biography": "Localized custom editor."'),
+      );
+    },
+  );
+
   testWidgets('invalid email and website show schema errors and cannot save', (
     tester,
   ) async {

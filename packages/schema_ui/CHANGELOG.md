@@ -1,5 +1,10 @@
 ## 0.0.1
 
+* Add SchemaFormMessages for localized labels, actions, parsing errors, schema
+  diagnostics, and root error summaries with English defaults.
+* Expose SchemaField.label and SchemaField.messages to custom editors; preserve
+  edits and pending errors when the message configuration changes.
+
 * Show boolean field labels once in the switch tile, preserving themed input
   decoration, descriptions, and validation errors.
 
