@@ -1,5 +1,8 @@
 ## 0.0.1
 
+* Show boolean field labels once in the switch tile, preserving themed input
+  decoration, descriptions, and validation errors.
+
 * Enable email and URI format assertions in the example, show schema diagnostics
   for invalid values, and clear previously submitted JSON when editing resumes.
 

@@ -584,7 +584,10 @@ class _SchemaFormState extends State<SchemaForm> {
     autovalidateMode: field.autovalidateMode,
     validator: field.validator,
     builder: (state) => InputDecorator(
-      decoration: _decoration(plan, field).copyWith(errorText: state.errorText),
+      decoration: InputDecoration(
+        helperText: plan.attributes['description'] as String?,
+        errorText: state.errorText,
+      ),
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(_fieldLabel(plan, field)),

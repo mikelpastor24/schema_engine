@@ -69,6 +69,7 @@ void main() {
         find.widgetWithText(SwitchListTile, 'flag (optional)'),
         findsOneWidget,
       );
+      expect(find.text('flag (optional)'), findsOneWidget);
       expect(
         tester
             .widget<TextField>(

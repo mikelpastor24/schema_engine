@@ -291,19 +291,27 @@ void main() {
     },
   );
 
-  testWidgets('boolean fields change JSON booleans', (tester) async {
+  testWidgets('boolean fields show one label and change JSON booleans', (
+    tester,
+  ) async {
     Object? changed;
     await tester.pumpWidget(
       _host(
         SchemaForm(
-          schema: schema.boolean().toJsonSchema(),
+          schema: schema.boolean().withKeywords({
+            'title': 'Active',
+            'description': 'Enable this feature.',
+          }).toJsonSchema(),
           onChanged: (value) => changed = value,
         ),
       ),
     );
+    expect(find.text('Active'), findsOneWidget);
+    expect(find.text('Enable this feature.'), findsOneWidget);
     await tester.tap(find.byType(Switch));
     await tester.pump();
     expect(changed, isTrue);
+    expect(find.text('Active'), findsOneWidget);
   });
 
   testWidgets(

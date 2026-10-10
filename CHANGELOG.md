@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Remove duplicate labels from schema_ui boolean fields while retaining helper
+  text and validation errors.
+
 * Enable format assertions in the schema_ui example so invalid email and URI
   values show schema errors and cannot be saved.
 

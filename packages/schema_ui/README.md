@@ -172,7 +172,9 @@ Required fields, root values, and array items cannot be omitted through `clear`.
 Controls inherit `ThemeData`, including input decoration, colors, typography,
 button themes, switch themes, and control sizing. `title` supplies labels and
 `description` supplies helper text. No control colors or font sizes are fixed
-by the package. Configure layout spacing through a theme extension:
+by the package. Boolean fields show their label once, beside the switch; their
+input decorator still displays descriptions and validation errors. Configure
+layout spacing through a theme extension:
 
 ```dart
 ThemeData(
