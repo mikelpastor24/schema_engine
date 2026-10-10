@@ -114,7 +114,9 @@ dart run tool/run_tests.dart
 
 If the launcher cannot start subprocesses or signal subscriptions are denied,
 invoke the SDK's `dartvm` executable with
-`--packages=.dart_tool/package_config.json` and the adapter path. The test
+`--packages=../../.dart_tool/package_config.json` and the adapter path from
+`packages/schema_engine`. The shared package configuration lives at the
+workspace root. The test
 adapter runs the same test declarations through development-only `test_api`
 internals. `tool/analyze.dart` checks semantic diagnostics only and does not
 replace the full SDK lint check. These adapters are development tools outside

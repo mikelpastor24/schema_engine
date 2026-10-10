@@ -19,7 +19,7 @@ def main():
         parser.error("revision must be a complete immutable Git commit hash")
     target = (args.directory or Path(tempfile.gettempdir()) /
               f"schema_engine_conformance_{args.revision}").resolve()
-    repository = Path(__file__).resolve().parent.parent
+    repository = Path(__file__).resolve().parents[3]
     if target == repository or repository in target.parents:
         parser.error("third-party fixtures must remain outside this repository")
     if target.exists() and any(target.iterdir()):

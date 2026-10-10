@@ -73,7 +73,12 @@ guideline, including benchmark evidence when motivated by performance.
 
 ## Current state and structure
 
-- The package is a pure Dart library with no runtime dependencies.
+- The repository is a Pub workspace with `packages/schema_engine` and
+  `packages/schema_ui`. The engine remains pure Dart with no runtime
+  dependencies; Flutter belongs only in `schema_ui`.
+- Paths below are relative to `packages/schema_engine`. Run engine tools and
+  benchmarks from that package directory. `schema_ui` contains its own library,
+  widget tests, documentation, and Material example screen.
 - `lib/schema_engine.dart` exports the public schema, draft, options, validator,
   diagnostic, and code-generation APIs; implementation lives in `lib/src/`.
 - `test/` contains original tests and generated validator fixtures.
@@ -194,7 +199,8 @@ and results reproducible without external services.
 ## Development commands
 
 ```sh
-dart pub get
+flutter pub get
+cd packages/schema_engine
 dart format lib test example benchmark tool
 dart analyze
 dart test
@@ -202,6 +208,11 @@ dart run example/all_drafts.dart
 dart run benchmark/validation.dart
 dart run benchmark/generated.dart
 ```
+
+From the repository root, `flutter analyze --no-pub` checks the workspace and
+`dart run tool/check.dart` runs all repository checks. Run UI tests with
+`flutter test --no-pub` from `packages/schema_ui`. Shared analysis options live
+at the repository root and apply to both packages.
 
 Regenerate `test/generated_validators.dart` with
 `dart run tool/generate_validators.dart` and format the result after changing

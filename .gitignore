@@ -22,12 +22,11 @@ migrate_working_dir/
 #.vscode/
 
 # Flutter/Dart/Pub related
-# Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
-/pubspec.lock
+# Keep the workspace lockfile; member packages use the shared resolution.
+**/pubspec.lock
+!/pubspec.lock
 **/doc/api/
 .dart_tool/
 .flutter-plugins-dependencies
-/build/
-/coverage/
-
-/local/
+build/
+coverage/
