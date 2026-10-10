@@ -1,5 +1,8 @@
 ## 0.0.1
 
+* Enable email and URI format assertions in the example, show schema diagnostics
+  for invalid values, and clear previously submitted JSON when editing resumes.
+
 * Always show optional properties with optional labels and omit untouched fields
   from JSON. Clear empty optional text/numeric fields and remove optional arrays
   when their final item is removed.

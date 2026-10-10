@@ -214,8 +214,14 @@ constraints in the fallback editor. See the engine's
 validation evidence; the UI does not claim complete automatic rendering of
 every keyword or draft.
 
-Forward `options: schema.SchemaOptions(assertFormats: true)` to assert formats;
-otherwise engine dialect defaults apply. Pass offline reference resources and
+Formats such as `email` and `uri` are annotations by default in the standard
+dialects. To reject malformed values, create
+`schema.SchemaOptions(assertFormats: true)` and pass the same options instance
+to `SchemaForm.options` across parent rebuilds. Format-aware keyboards alone
+do not enable validation. The example enables these assertions and displays
+schema diagnostics while preventing invalid submissions.
+
+Pass offline reference resources and
 `baseUri` through the same options as engine compilation. The UI performs no
 network loading; prepare resource maps separately. Invalid schemas and missing
 resources propagate engine exceptions rather than becoming instance errors.

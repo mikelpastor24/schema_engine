@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Enable format assertions in the schema_ui example so invalid email and URI
+  values show schema errors and cannot be saved.
+
 * Replace optional-property inclusion checkboxes with visible optional fields,
   automatic omission for empty edits, and explicit clear controls.
 

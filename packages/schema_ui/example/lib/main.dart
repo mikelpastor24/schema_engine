@@ -37,6 +37,7 @@ class _EditorScreen extends StatefulWidget {
 
 class _EditorScreenState extends State<_EditorScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _options = schema.SchemaOptions(assertFormats: true);
   final _document = schema.object({
     'name': schema.string().min(1).withKeywords({'title': 'Name'}),
     'biography': schema.string().max(500).withKeywords({
@@ -78,6 +79,7 @@ class _EditorScreenState extends State<_EditorScreen> {
           children: [
             SchemaForm(
               schema: _document,
+              options: _options,
               initialValue: const {
                 'name': 'Example',
                 'active': true,
@@ -85,6 +87,11 @@ class _EditorScreenState extends State<_EditorScreen> {
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
               pathBuilders: {'/biography': _biographyEditor},
+              onChanged: (_) {
+                if (_savedJson != null) {
+                  setState(() => _savedJson = null);
+                }
+              },
               onSaved: (instance) => setState(() {
                 _savedJson = schema.encodeJson(instance, indent: '  ');
               }),

@@ -825,6 +825,29 @@ void main() {
       ),
     );
     expect(key.currentState!.validate(), isFalse);
+    await tester.pump();
+    final error = document
+        .compile(options: schema.SchemaOptions(assertFormats: true))
+        .errors('invalid email')
+        .single;
+    expect(error.keyword, 'format');
+    expect(
+      tester
+          .widget<InputDecorator>(find.byType(InputDecorator))
+          .decoration
+          .errorText,
+      error.message,
+    );
+    await tester.enterText(find.byType(TextFormField), 'reader@example.com');
+    expect(key.currentState!.validate(), isTrue);
+    await tester.pump();
+    expect(
+      tester
+          .widget<InputDecorator>(find.byType(InputDecorator))
+          .decoration
+          .errorText,
+      isNull,
+    );
   });
 
   testWidgets('initial value updates apply on reset without discarding edits', (

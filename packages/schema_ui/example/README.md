@@ -37,10 +37,21 @@ Edit the name, active flag, and role. Biography, age, amount, email, website,
 and tags are always visible and marked optional. Untouched optional fields stay
 out of the saved JSON; clearing them removes their properties. Age uses an
 integer keyboard; amount uses a decimal keyboard and formatter. Email and
-website use format-aware
-keyboards. Biography uses a custom multiline `TextFormField`.
+website use format-aware keyboards. Biography uses a custom multiline
+`TextFormField`.
+
+The example enables `SchemaOptions(assertFormats: true)` so email and website
+values are checked against their `email` and `uri` formats. For example,
+`12231312312` is invalid in either field; `reader@example.com` and
+`https://example.com` are valid. Invalid values show the engine's schema
+diagnostics in their fields and prevent submission. Empty optional fields are
+omitted and do not trigger format errors. The engine's standard dialects treat
+formats as annotations unless format assertions are enabled.
+
 Select **Save instance** to validate and display the JSON, or **Reset** to
-restore the initial instance. The screen follows the system's light/dark theme.
+restore the initial instance. Editing after a successful save clears the
+displayed JSON until the next valid submission. The screen follows the system's
+light/dark theme.
 
 ## Checks
 
