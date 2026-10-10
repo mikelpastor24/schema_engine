@@ -10,7 +10,10 @@ Widget _host(Widget child, {ThemeData? theme}) => MaterialApp(
 
 Finder _textField(String label) => find.ancestor(
   of: find.byWidgetPredicate(
-    (widget) => widget is TextField && widget.decoration?.labelText == label,
+    (widget) =>
+        widget is TextField &&
+        (widget.decoration?.labelText == label ||
+            widget.decoration?.labelText == '$label (optional)'),
   ),
   matching: find.byType(TextFormField),
 );
@@ -185,37 +188,39 @@ void main() {
     expect(saved, {'name': ''});
   });
 
-  testWidgets('optional fields distinguish absence, empty string, and null', (
-    tester,
-  ) async {
-    final key = GlobalKey<FormState>();
-    Object? value;
-    await tester.pumpWidget(
-      _host(
-        Form(
-          key: key,
-          child: SchemaForm(
-            schema: schema.object({
-              'note': schema.string().nullable().optional(),
-            }).toJsonSchema(),
-            onChanged: (changed) => value = changed,
+  testWidgets(
+    'optional fields stay visible and distinguish absence from null',
+    (tester) async {
+      final key = GlobalKey<FormState>();
+      Object? value;
+      await tester.pumpWidget(
+        _host(
+          Form(
+            key: key,
+            child: SchemaForm(
+              schema: schema.object({
+                'note': schema.string().nullable().optional(),
+              }).toJsonSchema(),
+              onChanged: (changed) => value = changed,
+            ),
           ),
         ),
-      ),
-    );
-    expect(key.currentState!.validate(), isTrue);
-    expect(find.byType(TextFormField), findsNothing);
-    await tester.tap(find.text('Include note'));
-    await tester.pump();
-    expect(value, {'note': ''});
-    await tester.tap(find.text('Use null for note'));
-    await tester.pump();
-    expect(value, {'note': null});
-    expect(key.currentState!.validate(), isTrue);
-    await tester.tap(find.text('Include note'));
-    await tester.pump();
-    expect(value, <String, Object?>{});
-  });
+      );
+      expect(key.currentState!.validate(), isTrue);
+      expect(_textField('note'), findsOneWidget);
+      expect(find.byType(CheckboxListTile), findsNothing);
+      await tester.enterText(_textField('note'), 'Example');
+      await tester.pump();
+      expect(value, {'note': 'Example'});
+      await tester.tap(find.text('Use null for note (optional)'));
+      await tester.pump();
+      expect(value, {'note': null});
+      expect(key.currentState!.validate(), isTrue);
+      await tester.tap(find.byTooltip('Clear note'));
+      await tester.pump();
+      expect(value, <String, Object?>{});
+    },
+  );
 
   testWidgets(
     'numeric input retains exact large integers and rejects bad text',
@@ -483,10 +488,10 @@ void main() {
       ),
     );
     expect(key.currentState!.validate(), isTrue);
-    await tester.tap(find.text('Include name'));
+    await tester.enterText(_textField('name'), 'Example');
     await tester.pump();
     expect(key.currentState!.validate(), isFalse);
-    await tester.tap(find.text('Include email'));
+    await tester.enterText(_textField('email'), 'reader@example.com');
     await tester.pump();
     expect(key.currentState!.validate(), isTrue);
   });
@@ -692,7 +697,7 @@ void main() {
       ),
     );
     await tester.enterText(_textField('count'), '-');
-    await tester.tap(find.text('Include note'));
+    await tester.enterText(_textField('note'), 'Example');
     await tester.pump();
     expect(find.text('-'), findsOneWidget);
     expect(key.currentState!.validate(), isFalse);
@@ -898,7 +903,7 @@ void main() {
           ),
         );
         expect(_textField('name'), findsOneWidget);
-        expect(_textField('note'), findsNothing);
+        expect(_textField('note'), findsOneWidget);
         expect(key.currentState!.validate(), isFalse);
         await tester.enterText(_textField('name'), 'Example');
         expect(key.currentState!.validate(), isTrue);

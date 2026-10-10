@@ -23,6 +23,10 @@ class _SchemaJsonField extends StatelessWidget {
     enableSuggestions: false,
     validator: field.validator,
     onChanged: (text) {
+      if (text.isEmpty && !field.isRequired) {
+        field._clearValue(resetEditor: false);
+        return;
+      }
       try {
         field.onChanged(decodeJson(text));
       } on FormatException {

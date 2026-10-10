@@ -124,7 +124,9 @@ class _EditorScreenState extends State<_EditorScreen> {
         initialValue: field.value as String?,
         enabled: field.enabled,
         autovalidateMode: field.autovalidateMode,
-        decoration: const InputDecoration(labelText: 'Biography'),
+        decoration: InputDecoration(
+          labelText: field.isRequired ? 'Biography' : 'Biography (optional)',
+        ),
         minLines: 3,
         maxLines: null,
         validator: field.validator,

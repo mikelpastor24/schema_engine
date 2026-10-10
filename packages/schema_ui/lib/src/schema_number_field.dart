@@ -51,6 +51,10 @@ class _SchemaNumberFieldState extends State<_SchemaNumberField> {
   );
 
   void _onChanged(String text) {
+    if (text.isEmpty && !widget.field.isRequired) {
+      widget.field._clearValue(resetEditor: false);
+      return;
+    }
     var source = text.replaceAll(',', '.');
     // Decimal keyboards can start a fraction with its separator. Add the
     // required JSON zero only when decoding; keep the user's caret unchanged.

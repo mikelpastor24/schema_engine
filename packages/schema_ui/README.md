@@ -33,10 +33,24 @@ final editor = Form(
 ```
 
 Omit `initialValue` to start a new instance. Object properties stay absent until
-edited or explicitly included. A required string does not become present merely
+edited or explicitly assigned. A required string does not become present merely
 because its empty editor is displayed. Empty strings and explicit null remain
-distinct from absent properties. Nullable types provide a null switch; optional
-properties provide an inclusion checkbox.
+distinct from absent properties. Every optional property is visible from the
+start and its default label includes `(optional)`. Untouched optional fields
+are omitted from the JSON. Nullable types provide a null switch.
+
+Clearing an optional free-text or numeric field omits its property. Removing
+the last item from an optional array omits the array. Empty optional object
+ancestors are removed when their last assigned property is cleared; root
+objects and array items remain intact. A clear button appears beside assigned
+or invalid optional fields so booleans, enum selections, nulls, and containers
+can also return to an absent state. Required fields continue to follow their
+schema validation rules.
+
+Zero, false, explicitly selected null, enum choices (including an empty string),
+and explicitly assigned JSON values are retained. Existing initial instance
+values are not stripped, including empty strings and containers. Merely showing
+a control, changing focus, validating, or saving never assigns a default value.
 
 `SchemaForm` does not add a nested `Form`. Place it inside your own `Form` and
 call `formKey.currentState!.validate()`, then `save()` to submit, or `reset()` to
@@ -57,7 +71,7 @@ the form invalid until corrected.
 Values emitted by `onChanged` and `onSaved` are immutable snapshots. The editor
 never modifies the supplied instance. Numbers use the engine's lossless JSON
 decoder, including `BigInt` and `JsonNumber`; use `schema.encodeJson` for these
-values. Defaults are suggestions when explicitly adding a field or item, not
+values. Defaults are suggestions when explicitly adding an array item, not
 automatic changes to an existing instance.
 
 ## Text and numeric input
@@ -73,9 +87,10 @@ integers and precise decimals.
 Numeric formatters reject the entire edit for misplaced signs, repeated
 separators, alphabetic text, or other malformed input rather than stripping
 characters into a different number. Partial edits such as `-`, `1.`, or `1e-`
-remain visible and fail form validation until completed. IME composition and
-caret positions are preserved. Integral decimal representations already present
-in an instance are retained; newly entered integer text uses integer notation.
+remain visible and fail form validation until completed. Clearing an optional
+numeric field removes the property instead. IME composition and caret positions
+are preserved. Integral decimal representations already present in an instance
+are retained; newly entered integer text uses integer notation.
 Bounds and `multipleOf` remain validator checks, and numeric keyboards keep the
 minus sign available so invalid negative values can be corrected explicitly.
 
@@ -137,6 +152,21 @@ registered with the ancestor Form even when an override has no FormField.
 Custom editors handle their own display state; their subtree is recreated on
 reset and structural changes such as nullable switches or array removals.
 
+Custom builders receive absent optional fields too. Use `field.isRequired` to
+mark their labels, and `field.isPresent` to distinguish absence from null.
+`field.onChanged('')` omits an optional free-text property. Call `field.clear()`
+to omit other optional values and reset the editor:
+
+```dart
+IconButton(
+  tooltip: 'Clear value',
+  onPressed: field.enabled && !field.isRequired ? field.clear : null,
+  icon: const Icon(Icons.clear),
+);
+```
+
+Required fields, root values, and array items cannot be omitted through `clear`.
+
 ## Theme
 
 Controls inherit `ThemeData`, including input decoration, colors, typography,
@@ -166,7 +196,7 @@ API feature.
 | `boolean` | FormField with a SwitchListTile |
 | `enum`, supported-draft `const` | DropdownButtonFormField; accepts null and structured JSON choices |
 | One type plus `null` | Type editor with an explicit null switch |
-| `object`, named `properties` | Nested fields; optional inclusion controls |
+| `object`, named `properties` | All fields shown; optional labels and clear controls |
 | Additional properties and records | JSON object TextFormField; validates against the complete schema |
 | `array` | Nested item editors with add/remove controls |
 | Tuple schemas | Draft-aware `prefixItems` or tuple `items` editors |

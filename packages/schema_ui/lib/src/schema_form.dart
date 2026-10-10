@@ -25,7 +25,8 @@ final class SchemaField {
   SchemaField._(
     this._errorText,
     this._errors,
-    this._setInvalidInput, {
+    this._setInvalidInput,
+    this._clearValue, {
     required this.schema,
     required this.instancePath,
     required this.value,
@@ -65,6 +66,8 @@ final class SchemaField {
 
   /// Replaces this value with decoded JSON and clears its input error.
   ///
+  /// An empty string omits an optional free-text property. Other assignments,
+  /// including zero, false, null, enum choices, and JSON values, are preserved.
   /// Values are snapshotted. Unsupported values and cycles throw [ArgumentError].
   final ValueChanged<Object?> onChanged;
 
@@ -77,6 +80,26 @@ final class SchemaField {
   final String? Function() _errorText;
   final List<ValidationError> Function() _errors;
   final void Function(String text, String parsingMessage) _setInvalidInput;
+  final void Function({required bool resetEditor}) _clearValue;
+
+  /// Omits this optional property and resets its editor to the empty state.
+  ///
+  /// Use this in custom editors for values that do not have an empty text
+  /// representation. Throws [StateError] for required properties, root values,
+  /// and array items. Disabled and read-only fields cannot be cleared.
+  ///
+  /// ```dart
+  /// IconButton(
+  ///   onPressed: field.enabled && !field.isRequired ? field.clear : null,
+  ///   icon: const Icon(Icons.clear),
+  /// );
+  /// ```
+  void clear() {
+    if (isRequired) {
+      throw StateError('Only optional properties can be omitted.');
+    }
+    _clearValue(resetEditor: true);
+  }
 
   /// Current engine diagnostics located exactly at [instancePath].
   ///
@@ -110,8 +133,9 @@ final class SchemaForm extends StatefulWidget {
   ///
   /// [initialValue] is copied on initialization and reset. If omitted, an empty
   /// value matching the root editor is used. Explicit null stays null. Defaults
-  /// are annotations; they are suggested only when explicitly adding a field
-  /// or array item. [initialValue] changes alone follow Flutter's usual form
+  /// are annotations; array item additions can use them as suggestions. Visible
+  /// optional fields stay absent until assigned. [initialValue] changes alone
+  /// follow Flutter's usual form
   /// behavior: they take effect on reset, not on every parent rebuild.
   ///
   /// [pathBuilders] take precedence over [typeBuilders] and default editors.
@@ -285,7 +309,11 @@ class _SchemaFormState extends State<SchemaForm> {
     }
     final frozen = identical(value, _absent) ? value : _snapshot(value);
     setState(() {
+      final wasPresent = !identical(_at(_value, path), _absent);
       _value = _replace(_value, _segments(path), frozen);
+      if (wasPresent && identical(frozen, _absent)) {
+        _removeEmptyOptionalAncestors(path);
+      }
       _errors = null;
       _inputErrors.removeWhere(
         (key, _) =>
@@ -301,6 +329,40 @@ class _SchemaFormState extends State<SchemaForm> {
     });
     _rootKey.currentState?.didChange(_value);
     widget.onChanged?.call(_value);
+  }
+
+  void _removeEmptyOptionalAncestors(String path) {
+    final segments = _segments(path);
+    var plan = _plan;
+    var pointer = '';
+    final parents = <({String path, bool optional})>[];
+    for (final segment in segments.take(segments.length - 1)) {
+      pointer = '$pointer/${_escape(segment)}';
+      if (plan.properties[segment] case final _Plan child) {
+        parents.add((
+          path: pointer,
+          optional: !plan.required.contains(segment),
+        ));
+        plan = child;
+      } else if (plan.type == SchemaType.array) {
+        final index = int.tryParse(segment);
+        if (index == null) {
+          break;
+        }
+        parents.add((path: pointer, optional: false));
+        plan = plan.itemAt(index);
+      } else {
+        break;
+      }
+    }
+    for (final parent in parents.reversed) {
+      final current = _at(_value, parent.path);
+      if (parent.optional &&
+          current is Map<String, Object?> &&
+          current.isEmpty) {
+        _value = _replace(_value, _segments(parent.path), _absent);
+      }
+    }
   }
 
   void _setInputError(String path, String? error) {
@@ -414,6 +476,11 @@ class _SchemaFormState extends State<SchemaForm> {
           _setInvalidInput(path, text, parsingMessage);
         }
       },
+      ({required bool resetEditor}) {
+        if (enabled && !isRequired) {
+          _change(path, _absent, structure: resetEditor);
+        }
+      },
       schema: plan.schema,
       instancePath: path,
       value: value,
@@ -423,7 +490,14 @@ class _SchemaFormState extends State<SchemaForm> {
       autovalidateMode: widget.autovalidateMode,
       onChanged: (value) {
         if (enabled) {
-          _change(path, value);
+          final emptyText =
+              !isRequired &&
+              value is String &&
+              value.isEmpty &&
+              plan.type == SchemaType.string &&
+              !plan.fallback &&
+              plan.choices == null;
+          _change(path, emptyText ? _absent : value);
         }
       },
       setInputError: (error) {
@@ -475,8 +549,12 @@ class _SchemaFormState extends State<SchemaForm> {
       plan.attributes['title'] as String? ??
       (path.isEmpty ? 'Value' : _segments(path).last);
 
+  String _fieldLabel(_Plan plan, SchemaField field) =>
+      '${_label(plan, field.instancePath)}'
+      '${field.isRequired ? '' : ' (optional)'}';
+
   InputDecoration _decoration(_Plan plan, SchemaField field) => InputDecoration(
-    labelText: _label(plan, field.instancePath),
+    labelText: _fieldLabel(plan, field),
     helperText: plan.attributes['description'] as String?,
   );
 
@@ -509,7 +587,7 @@ class _SchemaFormState extends State<SchemaForm> {
       decoration: _decoration(plan, field).copyWith(errorText: state.errorText),
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text(_label(plan, field.instancePath)),
+        title: Text(_fieldLabel(plan, field)),
         value: field.value == true,
         onChanged: field.enabled
             ? (value) {
@@ -564,12 +642,16 @@ class _SchemaFormState extends State<SchemaForm> {
     children: [
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text('Use null for ${_label(plan, field.instancePath)}'),
+        title: Text('Use null for ${_fieldLabel(plan, field)}'),
         value: field.isPresent && field.value == null,
         onChanged: field.enabled
             ? (useNull) => _change(
                 field.instancePath,
-                useNull ? null : _emptyValue(plan, useDefault: false),
+                useNull
+                    ? null
+                    : field.isRequired
+                    ? _emptyValue(plan, useDefault: false)
+                    : _absent,
                 structure: true,
               )
             : null,
@@ -592,7 +674,7 @@ class _SchemaFormState extends State<SchemaForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          _label(plan, field.instancePath),
+          _fieldLabel(plan, field),
           style: Theme.of(context).textTheme.titleMedium,
         ),
         if (plan.attributes['description'] case final String description)
@@ -637,29 +719,35 @@ class _SchemaFormState extends State<SchemaForm> {
     final path = '${field.instancePath}/${_escape(name)}';
     final required = parent.required.contains(name);
     final present = !identical(_at(_value, path), _absent);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final editor = _editor(
+      context,
+      plan,
+      path,
+      isRequired: required,
+      parentEnabled: field.enabled,
+    );
+    if (required) {
+      return editor;
+    }
+    final hasInput =
+        present ||
+        _inputErrors.keys.any(
+          (key) => key == path || key.startsWith('$path/'),
+        ) ||
+        _invalidInputs.keys.any(
+          (key) => key == path || key.startsWith('$path/'),
+        );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!required)
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text('Include ${_label(plan, path)}'),
-            value: present,
-            onChanged: field.enabled && plan.attributes['readOnly'] != true
-                ? (include) => _change(
-                    path,
-                    include == true ? _emptyValue(plan) : _absent,
-                    structure: true,
-                  )
+        Expanded(child: editor),
+        if (hasInput)
+          IconButton(
+            tooltip: 'Clear ${_label(plan, path)}',
+            icon: const Icon(Icons.clear),
+            onPressed: field.enabled && plan.attributes['readOnly'] != true
+                ? () => _change(path, _absent, structure: true)
                 : null,
-          ),
-        if (required || present)
-          _editor(
-            context,
-            plan,
-            path,
-            isRequired: required,
-            parentEnabled: field.enabled,
           ),
       ],
     );
@@ -683,8 +771,14 @@ class _SchemaFormState extends State<SchemaForm> {
       autovalidateMode: field.autovalidateMode,
       validator: field.validator,
       onChanged: (text) {
+        if (text.isEmpty && !field.isRequired && plan.properties.isEmpty) {
+          field._clearValue(resetEditor: false);
+          return;
+        }
         try {
-          final decoded = decodeJson(text);
+          final decoded = text.isEmpty
+              ? const <String, Object?>{}
+              : decodeJson(text);
           if (decoded is! Map<String, Object?> ||
               decoded.keys.any(plan.properties.containsKey)) {
             field.setInputError(
@@ -692,7 +786,7 @@ class _SchemaFormState extends State<SchemaForm> {
             );
             return;
           }
-          _change(field.instancePath, {
+          final value = <String, Object?>{
             for (final entry
                 in (_at(_value, field.instancePath) is Map<String, Object?>
                         ? _at(_value, field.instancePath)!
@@ -702,7 +796,12 @@ class _SchemaFormState extends State<SchemaForm> {
               if (plan.properties.containsKey(entry.key))
                 entry.key: entry.value,
             ...decoded,
-          }, clearDescendantErrors: false);
+          };
+          _change(
+            field.instancePath,
+            value.isEmpty && !field.isRequired ? _absent : value,
+            clearDescendantErrors: false,
+          );
         } on FormatException {
           field.setInputError('Enter valid JSON.');
         }
@@ -730,10 +829,13 @@ class _SchemaFormState extends State<SchemaForm> {
                 tooltip: 'Remove item ${index + 1}',
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: field.enabled
-                    ? () => _change(field.instancePath, [
-                        ...items.take(index),
-                        ...items.skip(index + 1),
-                      ], structure: true)
+                    ? () => _change(
+                        field.instancePath,
+                        items.length == 1 && !field.isRequired
+                            ? _absent
+                            : [...items.take(index), ...items.skip(index + 1)],
+                        structure: true,
+                      )
                     : null,
               ),
             ),
@@ -973,6 +1075,9 @@ Object? _replace(Object? value, List<String> path, Object? replacement) {
   final result = value is Map<String, Object?>
       ? Map<String, Object?>.of(value)
       : <String, Object?>{};
+  if (identical(replacement, _absent) && !result.containsKey(segment)) {
+    return value;
+  }
   if (tail.isEmpty && identical(replacement, _absent)) {
     result.remove(segment);
   } else {

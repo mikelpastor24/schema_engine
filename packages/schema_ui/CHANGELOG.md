@@ -1,5 +1,11 @@
 ## 0.0.1
 
+* Always show optional properties with optional labels and omit untouched fields
+  from JSON. Clear empty optional text/numeric fields and remove optional arrays
+  when their final item is removed.
+* Add SchemaField.clear and clear controls for explicit optional values, keeping
+  zero, false, null, enum choices, and existing instance values intact.
+
 * Show compiled schema diagnostics for unparseable numeric input while keeping
   the last decoded instance value; use decoder diagnostics when no assertion
   applies.

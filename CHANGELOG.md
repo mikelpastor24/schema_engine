@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Replace optional-property inclusion checkboxes with visible optional fields,
+  automatic omission for empty edits, and explicit clear controls.
+
 * Replace fixed numeric input errors with schema_engine validation diagnostics.
 
 * Separate schema_ui text and numeric editors with automatic keyboard selection

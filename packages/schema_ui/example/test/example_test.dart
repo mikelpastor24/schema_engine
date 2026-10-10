@@ -7,12 +7,12 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(const ExampleApp());
-    await tester.tap(find.text('Include Biography'));
-    await tester.pump();
+    expect(find.byType(CheckboxListTile), findsNothing);
     final biography = find.ancestor(
       of: find.byWidgetPredicate(
         (widget) =>
-            widget is TextField && widget.decoration?.labelText == 'Biography',
+            widget is TextField &&
+            widget.decoration?.labelText == 'Biography (optional)',
       ),
       matching: find.byType(TextFormField),
     );
@@ -26,6 +26,15 @@ void main() {
     await tester.tap(find.text('Reset'));
     await tester.pump();
     expect(find.byType(SelectableText), findsNothing);
-    expect(biography, findsNothing);
+    expect(biography, findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(
+            find.descendant(of: biography, matching: find.byType(TextField)),
+          )
+          .controller!
+          .text,
+      isEmpty,
+    );
   });
 }
