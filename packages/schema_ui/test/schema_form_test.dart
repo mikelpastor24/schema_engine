@@ -37,12 +37,12 @@ void main() {
         ),
       ),
     );
-    await tester.enterText(_textField('count'), 'Invalid');
+    await tester.enterText(_textField('count'), '-');
     await tester.enterText(
       _textField('Additional properties (JSON)'),
       '{"extra": true}',
     );
-    expect(find.text('Invalid'), findsOneWidget);
+    expect(find.text('-'), findsOneWidget);
     expect(key.currentState!.validate(), isFalse);
     await tester.enterText(_textField('count'), '3');
     expect(key.currentState!.validate(), isTrue);
@@ -237,6 +237,9 @@ void main() {
       expect(changed, BigInt.parse('9007199254740993'));
       expect(key.currentState!.validate(), isTrue);
       await tester.enterText(find.byType(TextFormField), 'not a number');
+      expect(key.currentState!.validate(), isTrue);
+      expect(find.text('9007199254740993'), findsOneWidget);
+      await tester.enterText(find.byType(TextFormField), '-');
       expect(key.currentState!.validate(), isFalse);
       await tester.pump();
       expect(find.text('Enter a JSON number.'), findsOneWidget);
@@ -361,6 +364,9 @@ void main() {
       );
       expect(key.currentState!.validate(), isTrue);
       await tester.enterText(_textField('1'), '1.5');
+      expect(find.text('3'), findsOneWidget);
+      expect(key.currentState!.validate(), isTrue);
+      await tester.enterText(_textField('1'), '-');
       expect(key.currentState!.validate(), isFalse);
     });
   }
@@ -678,10 +684,10 @@ void main() {
         ),
       ),
     );
-    await tester.enterText(_textField('count'), 'Invalid');
+    await tester.enterText(_textField('count'), '-');
     await tester.tap(find.text('Include note'));
     await tester.pump();
-    expect(find.text('Invalid'), findsOneWidget);
+    expect(find.text('-'), findsOneWidget);
     expect(key.currentState!.validate(), isFalse);
   });
 
@@ -847,7 +853,7 @@ void main() {
         ),
       ),
     );
-    await tester.enterText(find.byType(TextFormField), 'Bad number');
+    await tester.enterText(find.byType(TextFormField), '-');
     expect(key.currentState!.validate(), isFalse);
     await tester.pumpWidget(
       _host(

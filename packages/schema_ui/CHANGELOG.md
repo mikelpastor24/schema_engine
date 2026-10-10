@@ -1,5 +1,10 @@
 ## 0.0.1
 
+* Separate text, numeric, and JSON editors; select format-aware text keyboards
+  and signed integer/decimal keyboards automatically.
+* Add numeric formatters that preserve partial edits and IME composition,
+  reject malformed pastes, and support decimal commas and scientific notation.
+
 * Make the example a runnable workspace application with Web and Windows
   runners, local package dependencies, and a dedicated widget test.
 

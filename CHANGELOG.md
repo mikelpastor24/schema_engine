@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Separate schema_ui text and numeric editors with automatic keyboard selection
+  and input formatters, preserving exact numbers and schema validation.
+
 * Make the schema_ui example a runnable Flutter workspace application with
   browser and Windows support.
 

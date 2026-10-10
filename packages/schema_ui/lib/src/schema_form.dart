@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:schema_engine/schema_engine.dart';
 
 import 'schema_ui_theme.dart';
+
+part 'schema_json_field.dart';
+part 'schema_number_field.dart';
+part 'schema_text_field.dart';
 
 const _absent = Object();
 
@@ -387,7 +392,7 @@ class _SchemaFormState extends State<SchemaForm> {
       return custom(context, field);
     }
     if (plan.fallback) {
-      return _textEditor(plan, field, json: true);
+      return _jsonEditor(plan, field);
     }
     if (plan.choices != null) {
       return _enumEditor(plan, field);
@@ -402,7 +407,7 @@ class _SchemaFormState extends State<SchemaForm> {
       ),
       SchemaType.number || SchemaType.integer
           when !present || _isNumber(value) =>
-        _textEditor(plan, field, numeric: true),
+        _numberEditor(plan, field),
       SchemaType.boolean when !present || value is bool => _booleanEditor(
         plan,
         field,
@@ -414,7 +419,7 @@ class _SchemaFormState extends State<SchemaForm> {
         plan,
         field,
       ),
-      _ => _textEditor(plan, field, json: true),
+      _ => _jsonEditor(plan, field),
     };
     return plan.nullable
         ? _nullableEditor(context, plan, field, editor)
@@ -430,50 +435,24 @@ class _SchemaFormState extends State<SchemaForm> {
     helperText: plan.attributes['description'] as String?,
   );
 
-  Widget _textEditor(
-    _Plan plan,
-    SchemaField field, {
-    bool numeric = false,
-    bool json = false,
-  }) => TextFormField(
-    key: ValueKey((field.instancePath, numeric, json)),
-    initialValue: !field.isPresent
-        ? ''
-        : json || numeric
-        ? encodeJson(field.value)
-        : field.value as String,
-    enabled: field.enabled,
-    autovalidateMode: field.autovalidateMode,
+  Widget _textEditor(_Plan plan, SchemaField field) => _SchemaTextField(
+    key: ValueKey(('text', field.instancePath)),
+    field: field,
     decoration: _decoration(plan, field),
-    keyboardType: numeric
-        ? TextInputType.numberWithOptions(
-            signed: true,
-            decimal: plan.type != SchemaType.integer,
-          )
-        : json
-        ? TextInputType.multiline
-        : TextInputType.text,
-    minLines: json ? 3 : 1,
-    maxLines: json ? null : 1,
-    validator: field.validator,
-    onChanged: (text) {
-      if (!numeric && !json) {
-        field.onChanged(text);
-        return;
-      }
-      try {
-        final decoded = decodeJson(text);
-        if (numeric && !_isNumber(decoded)) {
-          field.setInputError('Enter a JSON number.');
-        } else {
-          field.onChanged(decoded);
-        }
-      } on FormatException {
-        field.setInputError(
-          numeric ? 'Enter a JSON number.' : 'Enter valid JSON.',
-        );
-      }
-    },
+    format: plan.attributes['format'] as String?,
+  );
+
+  Widget _numberEditor(_Plan plan, SchemaField field) => _SchemaNumberField(
+    key: ValueKey(('number', field.instancePath)),
+    field: field,
+    decoration: _decoration(plan, field),
+    integer: plan.type == SchemaType.integer,
+  );
+
+  Widget _jsonEditor(_Plan plan, SchemaField field) => _SchemaJsonField(
+    key: ValueKey(('json', field.instancePath)),
+    field: field,
+    decoration: _decoration(plan, field),
   );
 
   Widget _booleanEditor(_Plan plan, SchemaField field) => FormField<bool>(

@@ -60,6 +60,34 @@ decoder, including `BigInt` and `JsonNumber`; use `schema.encodeJson` for these
 values. Defaults are suggestions when explicitly adding a field or item, not
 automatic changes to an existing instance.
 
+## Text and numeric input
+
+Text, numeric, and raw JSON editors have separate implementations and input
+policies. Integer fields request a signed integer keyboard and accept a leading
+minus sign and ASCII digits. Number fields request a signed decimal keyboard
+and also accept fractions and scientific notation. A dot or comma can be used
+as the decimal separator; a leading separator such as `.5` is decoded as `0.5`.
+Grouping separators are not supported. Exact decoding still preserves large
+integers and precise decimals.
+
+Numeric formatters reject the entire edit for misplaced signs, repeated
+separators, alphabetic text, or other malformed input rather than stripping
+characters into a different number. Partial edits such as `-`, `1.`, or `1e-`
+remain visible and fail form validation until completed. IME composition and
+caret positions are preserved. Integral decimal representations already present
+in an instance are retained; newly entered integer text uses integer notation.
+Bounds and `multipleOf` remain validator checks, and numeric keyboards keep the
+minus sign available so invalid negative values can be corrected explicitly.
+
+Strings use a single-line formatter and a text keyboard, with email keyboards
+for `email`/`idn-email`, URL keyboards for URI/IRI formats, and date/time keyboards
+for `date`, `time`, and `date-time`. These hints also apply when formats are
+annotations. Patterns and length constraints are validated without filtering
+or truncating text, preserving JSON Schema's Unicode code-point semantics.
+Numeric and structured-format fields disable autocorrection and suggestions.
+Raw JSON editors use multiline keyboards and do not apply numeric filtering.
+Custom builders continue to control their own keyboards and formatters.
+
 ## Override widgets
 
 Override every string editor, for example with an application rich text editor,
@@ -125,8 +153,9 @@ API feature.
 
 | Schema shape | Default editor |
 | --- | --- |
-| `string` | TextFormField |
-| `number`, `integer` | TextFormField with a numeric keyboard and exact JSON parsing |
+| `string` | TextFormField with format-aware keyboard hints and single-line input |
+| `integer` | Dedicated numeric TextFormField with a signed integer keyboard and integer formatter |
+| `number` | Dedicated numeric TextFormField with a signed decimal keyboard, numeric formatter, and exact decoding |
 | `boolean` | FormField with a SwitchListTile |
 | `enum`, supported-draft `const` | DropdownButtonFormField; accepts null and structured JSON choices |
 | One type plus `null` | Type editor with an explicit null switch |
@@ -140,7 +169,8 @@ API feature.
 
 Automatic layouts are intentionally narrower than engine validation support.
 References are not expanded into recursive widget trees. Branch selection,
-dynamic property widgets, specialized format editors, and automatic layouts for
+dynamic property widgets, specialized format controls such as date pickers,
+and automatic layouts for
 custom vocabularies are not implemented. The engine still checks their
 constraints in the fallback editor. See the engine's
 [draft/feature matrix](../schema_engine/docs/conformance.md) for its recorded

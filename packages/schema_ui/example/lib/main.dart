@@ -45,6 +45,15 @@ class _EditorScreenState extends State<_EditorScreen> {
     'age': schema.integer().nonnegative().withKeywords({
       'title': 'Age',
     }).optional(),
+    'amount': schema.number().nonnegative().multipleOf(0.01).withKeywords({
+      'title': 'Amount',
+    }).optional(),
+    'email': schema.string().email().withKeywords({
+      'title': 'Email',
+    }).optional(),
+    'website': schema.string().url().withKeywords({
+      'title': 'Website',
+    }).optional(),
     'active': schema.boolean().withKeywords({'title': 'Active'}),
     'role': schema.enumValues(['reader', 'editor']).withKeywords({
       'title': 'Role',

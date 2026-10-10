@@ -34,7 +34,9 @@ Run `flutter doctor -v` to inspect the local toolchain.
 ## Use the example
 
 Edit the name, active flag, and role. Enable optional properties to edit a
-biography, age, or tags. Biography uses a custom multiline `TextFormField`.
+biography, age, amount, email, website, or tags. Age uses an integer keyboard;
+amount uses a decimal keyboard and formatter; email and website use format-aware
+keyboards. Biography uses a custom multiline `TextFormField`.
 Select **Save instance** to validate and display the JSON, or **Reset** to
 restore the initial instance. The screen follows the system's light/dark theme.
 
