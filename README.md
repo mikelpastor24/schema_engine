@@ -29,7 +29,8 @@ dart run tool/check.dart
 
 `tool/check.dart` resolves dependencies, checks formatting, analyzes both
 packages, runs engine and widget tests, and runs the engine's all-drafts example.
-It exits as soon as a check fails.
+It also runs the example application's widget tests and exits as soon as a
+check fails.
 
 To run individual tests:
 
@@ -83,3 +84,13 @@ See the [schema_ui API and rendering matrix](packages/schema_ui/README.md) for
 widget overrides, theming, instance presence, and rendering limitations. The
 [example app](packages/schema_ui/example) demonstrates default fields and a
 custom multiline string editor.
+
+To open it in Chrome after resolving workspace dependencies:
+
+```sh
+cd packages/schema_ui/example
+flutter run -d chrome
+```
+
+The application also includes a Windows runner. See its
+[run instructions](packages/schema_ui/example/README.md) for other devices.

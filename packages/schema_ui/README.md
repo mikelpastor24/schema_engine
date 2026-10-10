@@ -155,11 +155,21 @@ resources propagate engine exceptions rather than becoming instance errors.
 
 ## Example and checks
 
-See [example/main.dart](example/main.dart) for a complete Material screen
-with submission, reset, optional properties, and a string override. It can be
-used as the entry point in a Flutter host application; platform runner projects
-are not included in this package example.
+The [example application](example/README.md) includes Web and Windows runners,
+submission, reset, optional properties, and a string override. From the
+repository root:
+
+```sh
+flutter pub get
+cd packages/schema_ui/example
+flutter run -d chrome
+```
+
+Use `flutter run -d windows` for the desktop application when the Windows
+development toolchain is installed. The entry point is
+[example/lib/main.dart](example/lib/main.dart).
 
 From the repository root run `flutter pub get`; from this package run
 `flutter test --no-pub`. Widget tests exercise Form integration, overrides,
 exact numbers, references, themes, arrays, presence, and lifecycle behavior.
+Run the example's widget tests separately from `example` with the same command.

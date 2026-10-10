@@ -8,6 +8,7 @@ environment:
 workspace:
   - packages/schema_engine
   - packages/schema_ui
+  - packages/schema_ui/example
 
 dev_dependencies:
   lints: ^6.1.0

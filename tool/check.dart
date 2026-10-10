@@ -39,5 +39,9 @@ Future<void> main() async {
       '${Platform.pathSeparator}schema_ui';
   await run('dart', ['test'], engine);
   await run('flutter', ['test', '--no-pub'], ui);
+  await run('flutter', [
+    'test',
+    '--no-pub',
+  ], '$ui${Platform.pathSeparator}example');
   await run('dart', ['run', 'example/all_drafts.dart'], engine);
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../example/main.dart';
+import 'package:schema_ui_example/main.dart';
 
 void main() {
   testWidgets('example edits a custom field, submits JSON, and resets', (

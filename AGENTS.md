@@ -78,7 +78,8 @@ guideline, including benchmark evidence when motivated by performance.
   dependencies; Flutter belongs only in `schema_ui`.
 - Paths below are relative to `packages/schema_engine`. Run engine tools and
   benchmarks from that package directory. `schema_ui` contains its own library,
-  widget tests, documentation, and Material example screen.
+  widget tests and documentation. `packages/schema_ui/example` is a separate
+  workspace application with its own widget tests and Web/Windows runners.
 - `lib/schema_engine.dart` exports the public schema, draft, options, validator,
   diagnostic, and code-generation APIs; implementation lives in `lib/src/`.
 - `test/` contains original tests and generated validator fixtures.
@@ -213,6 +214,10 @@ From the repository root, `flutter analyze --no-pub` checks the workspace and
 `dart run tool/check.dart` runs all repository checks. Run UI tests with
 `flutter test --no-pub` from `packages/schema_ui`. Shared analysis options live
 at the repository root and apply to both packages.
+
+Run the UI example from `packages/schema_ui/example` with
+`flutter run -d chrome` or `flutter run -d windows`. Its widget tests use
+`flutter test --no-pub` from the same directory.
 
 Regenerate `test/generated_validators.dart` with
 `dart run tool/generate_validators.dart` and format the result after changing

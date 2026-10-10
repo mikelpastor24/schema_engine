@@ -1,5 +1,8 @@
 ## 0.0.1
 
+* Make the example a runnable workspace application with Web and Windows
+  runners, local package dependencies, and a dedicated widget test.
+
 * Generate Material form fields for strings, exact numbers, booleans, enums,
   nullable values, object properties, arrays, and tuples.
 * Validate complete instances with a reusable schema_engine validator and

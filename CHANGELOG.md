@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Make the schema_ui example a runnable Flutter workspace application with
+  browser and Windows support.
+
 * Migrate the Dart engine into `packages/schema_engine` without changing its
   public import, runtime dependencies, or validation implementation.
 * Add `packages/schema_ui`, a Flutter form generation package with ancestor
