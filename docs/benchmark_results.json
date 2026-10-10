@@ -1,0 +1,288 @@
+{
+  "runtimeJit": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "iterations": 50000,
+    "samples": 7,
+    "mode": "JIT",
+    "results": {
+      "integer": {
+        "parseNs": 20333.333333333332,
+        "compileNs": 58553.333333333336,
+        "validNs": 33.76,
+        "invalidNs": 40.2,
+        "firstErrorNs": 440.16,
+        "allErrorsNs": 478.02
+      },
+      "object": {
+        "parseNs": 13563.333333333334,
+        "compileNs": 150536.66666666666,
+        "validNs": 304.22,
+        "invalidNs": 84.84,
+        "firstErrorNs": 655.2,
+        "allErrorsNs": 1632.42
+      },
+      "array": {
+        "parseNs": 5253.333333333333,
+        "compileNs": 18803.333333333332,
+        "validNs": 431.52,
+        "invalidNs": 98.36,
+        "firstErrorNs": 1205.48,
+        "allErrorsNs": 1452.9
+      },
+      "branches": {
+        "parseNs": 5256.666666666667,
+        "compileNs": 79016.66666666667,
+        "validNs": 372.04,
+        "invalidNs": 59.66,
+        "firstErrorNs": 627.32,
+        "allErrorsNs": 708.48
+      },
+      "recursive": {
+        "parseNs": 3310.0,
+        "compileNs": 106046.66666666667,
+        "validNs": 935.92,
+        "invalidNs": 484.24,
+        "firstErrorNs": 1188.46,
+        "allErrorsNs": 1246.86
+      },
+      "unevaluated": {
+        "parseNs": 4776.666666666667,
+        "compileNs": 40826.666666666664,
+        "validNs": 720.96,
+        "invalidNs": 670.52,
+        "firstErrorNs": 1253.72,
+        "allErrorsNs": 1456.54
+      },
+      "decimal": {
+        "parseNs": 8906.666666666666,
+        "compileNs": 25003.333333333332,
+        "validNs": 134.64,
+        "invalidNs": 114.58,
+        "firstErrorNs": 544.0,
+        "allErrorsNs": 588.94
+      }
+    },
+    "sink": 5785200
+  },
+  "runtimeAot": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "iterations": 50000,
+    "samples": 7,
+    "mode": "AOT",
+    "results": {
+      "integer": {
+        "parseNs": 4246.666666666667,
+        "compileNs": 11026.666666666666,
+        "validNs": 22.04,
+        "invalidNs": 15.98,
+        "firstErrorNs": 457.66,
+        "allErrorsNs": 524.78
+      },
+      "object": {
+        "parseNs": 9070.0,
+        "compileNs": 40923.333333333336,
+        "validNs": 362.5,
+        "invalidNs": 70.66,
+        "firstErrorNs": 759.1,
+        "allErrorsNs": 2057.32
+      },
+      "array": {
+        "parseNs": 4483.333333333333,
+        "compileNs": 15566.666666666666,
+        "validNs": 593.38,
+        "invalidNs": 144.58,
+        "firstErrorNs": 1140.0,
+        "allErrorsNs": 1272.1
+      },
+      "branches": {
+        "parseNs": 3523.3333333333335,
+        "compileNs": 29306.666666666668,
+        "validNs": 386.68,
+        "invalidNs": 46.98,
+        "firstErrorNs": 719.16,
+        "allErrorsNs": 882.12
+      },
+      "recursive": {
+        "parseNs": 3893.3333333333335,
+        "compileNs": 29436.666666666668,
+        "validNs": 1100.06,
+        "invalidNs": 472.76,
+        "firstErrorNs": 1360.74,
+        "allErrorsNs": 1652.76
+      },
+      "unevaluated": {
+        "parseNs": 5713.333333333333,
+        "compileNs": 45240.0,
+        "validNs": 719.78,
+        "invalidNs": 616.68,
+        "firstErrorNs": 1539.32,
+        "allErrorsNs": 1678.86
+      },
+      "decimal": {
+        "parseNs": 4153.333333333333,
+        "compileNs": 9963.333333333334,
+        "validNs": 95.7,
+        "invalidNs": 102.86,
+        "firstErrorNs": 675.34,
+        "allErrorsNs": 842.8
+      }
+    },
+    "sink": 5785200
+  },
+  "generatedJit": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "JIT",
+    "iterations": 200000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "integer": {
+        "runtimeNs": 30.27,
+        "generatedNs": 4.605,
+        "speedup": 6.57328990228013
+      },
+      "object": {
+        "runtimeNs": 352.67,
+        "generatedNs": 157.77,
+        "speedup": 2.235342587310642
+      },
+      "array": {
+        "runtimeNs": 428.12,
+        "generatedNs": 20.355,
+        "speedup": 21.032670105625154
+      }
+    },
+    "sink": 8700000
+  },
+  "generatedAot": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "AOT",
+    "iterations": 200000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "integer": {
+        "runtimeNs": 30.825,
+        "generatedNs": 11.615,
+        "speedup": 2.653895824365045
+      },
+      "object": {
+        "runtimeNs": 382.515,
+        "generatedNs": 214.22,
+        "speedup": 1.7856175893940809
+      },
+      "array": {
+        "runtimeNs": 557.62,
+        "generatedNs": 169.61,
+        "speedup": 3.2876599257119272
+      }
+    },
+    "sink": 8700000
+  },
+  "formatsJit": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "JIT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2387.92,
+        "invalidNs": 1343.14
+      },
+      "uri-template": {
+        "validNs": 3065.64,
+        "invalidNs": 2125.4
+      },
+      "ipv4": {
+        "validNs": 42.26,
+        "invalidNs": 25.88
+      },
+      "ipv6": {
+        "validNs": 1163.92,
+        "invalidNs": 79.84
+      },
+      "email": {
+        "validNs": 2704.9,
+        "invalidNs": 324.0
+      },
+      "idn-email": {
+        "validNs": 4912.88,
+        "invalidNs": 2549.74
+      },
+      "hostname": {
+        "validNs": 3186.52,
+        "invalidNs": 1655.06
+      },
+      "idn-hostname": {
+        "validNs": 5437.92,
+        "invalidNs": 4786.28
+      },
+      "date-time": {
+        "validNs": 1454.56,
+        "invalidNs": 692.5
+      },
+      "regex": {
+        "validNs": 125.06,
+        "invalidNs": 2904.54
+      }
+    },
+    "sink": 3600000
+  },
+  "formatsAot": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "AOT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2918.72,
+        "invalidNs": 1574.86
+      },
+      "uri-template": {
+        "validNs": 3978.34,
+        "invalidNs": 2514.48
+      },
+      "ipv4": {
+        "validNs": 30.86,
+        "invalidNs": 16.56
+      },
+      "ipv6": {
+        "validNs": 1180.1,
+        "invalidNs": 67.96
+      },
+      "email": {
+        "validNs": 2852.86,
+        "invalidNs": 291.5
+      },
+      "idn-email": {
+        "validNs": 5577.28,
+        "invalidNs": 2718.28
+      },
+      "hostname": {
+        "validNs": 3808.26,
+        "invalidNs": 1696.16
+      },
+      "idn-hostname": {
+        "validNs": 5431.0,
+        "invalidNs": 5135.42
+      },
+      "date-time": {
+        "validNs": 1576.28,
+        "invalidNs": 839.86
+      },
+      "regex": {
+        "validNs": 85.34,
+        "invalidNs": 3839.8
+      }
+    },
+    "sink": 3600000
+  }
+}

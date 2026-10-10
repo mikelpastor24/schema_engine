@@ -1,0 +1,309 @@
+{
+  "scope": "Pooled IPv4 assertion before/after the original single-pass ASCII implementation; other format checks are controls, not uniform improvement claims.",
+  "beforeJit": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "JIT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2461.02,
+        "invalidNs": 1466.96
+      },
+      "uri-template": {
+        "validNs": 3419.12,
+        "invalidNs": 2290.04
+      },
+      "ipv4": {
+        "validNs": 1381.82,
+        "invalidNs": 531.2
+      },
+      "ipv6": {
+        "validNs": 1458.38,
+        "invalidNs": 90.02
+      },
+      "email": {
+        "validNs": 2659.16,
+        "invalidNs": 300.7
+      },
+      "idn-email": {
+        "validNs": 4285.42,
+        "invalidNs": 2497.72
+      },
+      "hostname": {
+        "validNs": 3009.86,
+        "invalidNs": 1730.12
+      },
+      "idn-hostname": {
+        "validNs": 4414.64,
+        "invalidNs": 4388.82
+      },
+      "date-time": {
+        "validNs": 1543.06,
+        "invalidNs": 701.86
+      },
+      "regex": {
+        "validNs": 114.02,
+        "invalidNs": 2772.32
+      }
+    },
+    "sink": 3600000
+  },
+  "beforeAot": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "AOT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2953.6,
+        "invalidNs": 1690.6
+      },
+      "uri-template": {
+        "validNs": 4253.74,
+        "invalidNs": 2663.38
+      },
+      "ipv4": {
+        "validNs": 1250.12,
+        "invalidNs": 444.8
+      },
+      "ipv6": {
+        "validNs": 1484.84,
+        "invalidNs": 64.72
+      },
+      "email": {
+        "validNs": 2948.72,
+        "invalidNs": 239.68
+      },
+      "idn-email": {
+        "validNs": 5113.7,
+        "invalidNs": 2597.92
+      },
+      "hostname": {
+        "validNs": 3504.74,
+        "invalidNs": 1748.92
+      },
+      "idn-hostname": {
+        "validNs": 5223.48,
+        "invalidNs": 4760.84
+      },
+      "date-time": {
+        "validNs": 1424.6,
+        "invalidNs": 696.52
+      },
+      "regex": {
+        "validNs": 80.68,
+        "invalidNs": 3596.8
+      }
+    },
+    "sink": 3600000
+  },
+  "afterJit": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "JIT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2406.4,
+        "invalidNs": 1332.3
+      },
+      "uri-template": {
+        "validNs": 3063.6,
+        "invalidNs": 2044.2
+      },
+      "ipv4": {
+        "validNs": 26.3,
+        "invalidNs": 18.4
+      },
+      "ipv6": {
+        "validNs": 1128.28,
+        "invalidNs": 92.06
+      },
+      "email": {
+        "validNs": 2355.7,
+        "invalidNs": 252.8
+      },
+      "idn-email": {
+        "validNs": 3958.72,
+        "invalidNs": 2230.74
+      },
+      "hostname": {
+        "validNs": 2978.36,
+        "invalidNs": 1538.24
+      },
+      "idn-hostname": {
+        "validNs": 4534.78,
+        "invalidNs": 3985.48
+      },
+      "date-time": {
+        "validNs": 1346.44,
+        "invalidNs": 617.58
+      },
+      "regex": {
+        "validNs": 96.3,
+        "invalidNs": 2596.04
+      }
+    },
+    "sink": 3600000
+  },
+  "afterAot": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "AOT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2817.92,
+        "invalidNs": 1600.84
+      },
+      "uri-template": {
+        "validNs": 4032.64,
+        "invalidNs": 2482.16
+      },
+      "ipv4": {
+        "validNs": 27.4,
+        "invalidNs": 16.26
+      },
+      "ipv6": {
+        "validNs": 1241.5,
+        "invalidNs": 79.24
+      },
+      "email": {
+        "validNs": 2812.98,
+        "invalidNs": 242.3
+      },
+      "idn-email": {
+        "validNs": 5632.86,
+        "invalidNs": 2830.82
+      },
+      "hostname": {
+        "validNs": 3497.82,
+        "invalidNs": 1865.48
+      },
+      "idn-hostname": {
+        "validNs": 5348.04,
+        "invalidNs": 5087.32
+      },
+      "date-time": {
+        "validNs": 1421.42,
+        "invalidNs": 708.44
+      },
+      "regex": {
+        "validNs": 83.72,
+        "invalidNs": 3505.8
+      }
+    },
+    "sink": 3600000
+  },
+  "beforeAotRepeat": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "AOT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2951.18,
+        "invalidNs": 1674.38
+      },
+      "uri-template": {
+        "validNs": 4223.86,
+        "invalidNs": 2583.3
+      },
+      "ipv4": {
+        "validNs": 1266.26,
+        "invalidNs": 465.28
+      },
+      "ipv6": {
+        "validNs": 1361.5,
+        "invalidNs": 64.98
+      },
+      "email": {
+        "validNs": 2882.04,
+        "invalidNs": 253.24
+      },
+      "idn-email": {
+        "validNs": 4932.74,
+        "invalidNs": 2680.78
+      },
+      "hostname": {
+        "validNs": 3503.42,
+        "invalidNs": 1786.58
+      },
+      "idn-hostname": {
+        "validNs": 5145.12,
+        "invalidNs": 5187.12
+      },
+      "date-time": {
+        "validNs": 1481.94,
+        "invalidNs": 711.74
+      },
+      "regex": {
+        "validNs": 81.6,
+        "invalidNs": 3561.74
+      }
+    },
+    "sink": 3600000
+  },
+  "afterAotRepeat": {
+    "sdk": "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+    "platform": "windows",
+    "mode": "AOT",
+    "iterations": 50000,
+    "samples": 7,
+    "instancePool": 64,
+    "results": {
+      "uri": {
+        "validNs": 2833.92,
+        "invalidNs": 1568.46
+      },
+      "uri-template": {
+        "validNs": 4035.08,
+        "invalidNs": 2704.86
+      },
+      "ipv4": {
+        "validNs": 28.28,
+        "invalidNs": 16.62
+      },
+      "ipv6": {
+        "validNs": 1400.4,
+        "invalidNs": 69.16
+      },
+      "email": {
+        "validNs": 2969.98,
+        "invalidNs": 275.94
+      },
+      "idn-email": {
+        "validNs": 4955.72,
+        "invalidNs": 2676.5
+      },
+      "hostname": {
+        "validNs": 3683.2,
+        "invalidNs": 1968.86
+      },
+      "idn-hostname": {
+        "validNs": 6364.76,
+        "invalidNs": 5539.16
+      },
+      "date-time": {
+        "validNs": 1662.18,
+        "invalidNs": 764.36
+      },
+      "regex": {
+        "validNs": 101.04,
+        "invalidNs": 3740.64
+      }
+    },
+    "sink": 3600000
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-01/schema#",
+  "type": "object",
+  "title": "Person",
+  "description": "A minimal person record.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "optional": false
+    },
+    "age": {
+      "type": "integer",
+      "minimum": 0,
+      "optional": true
+    }
+  }
+}

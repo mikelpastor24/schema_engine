@@ -1,39 +1,219 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# schema_engine
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+A portable Dart package for parsing, constructing, serializing, and compiling
+JSON Schemas into reusable validators. The implementation is original Dart,
+with no runtime dependencies or Flutter requirement. Its architecture applies
+compilation and specialization ideas from the Rust [json-schema-rs / jsonschema](https://docs.rs/jsonschema/) project.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
+Requires Dart 3.13 or later. Licensed under MIT.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+## Parse once, compile once, validate many times
 
 ```dart
-const like = 'sample';
+import 'package:schema_engine/schema_engine.dart';
+
+void main() {
+  final schema = JsonSchema.parse(r'''
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "age": {"type": "integer", "minimum": 0}
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    }
+  ''');
+  final validator = schema.compile();
+
+  print(validator.isValid({'name': 'Example', 'age': 30})); // true
+  print(validator.validate({'age': 30})); // First error, or null if valid.
+  print(validator.errors({'name': '', 'age': -1})); // All assertion errors.
+}
 ```
 
-## Additional information
+`isValid` avoids diagnostic errors, messages, and instance paths. Regular
+expressions, references, and property lookups are prepared during compilation.
+Scalar assertions have specialized boolean functions. Acyclic static references
+avoid cycle-tracking state; recursive and dynamic references use a per-validation
+context. Evaluation tracking is allocated where `unevaluated*` semantics require it.
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+Inputs are decoded JSON values: null, booleans, strings, finite numbers, lists,
+and maps with string keys. Validators do not modify instances or perform I/O.
+Schema documents are copied and frozen, so changing an original map cannot
+change an already compiled validator.
+Use `decodeJson` for JSON text whose large integers or precise decimals must
+remain exact. The validators also accept `BigInt` and `JsonNumber` values.
+
+## Build schemas with typed arguments
+
+```dart
+final schema = JsonSchema.build(
+  type: SchemaType.object,
+  properties: {
+    'name': JsonSchema.build(type: SchemaType.string, minLength: 1),
+    'age': JsonSchema.build(type: SchemaType.integer, minimum: 0),
+  },
+  required: ['name'],
+  additionalProperties: JsonSchema.fromJson(false),
+  keywords: {'description': 'An example record.', 'x-purpose': 'sample'},
+);
+
+final jsonValue = schema.toJson();
+final jsonText = schema.toJsonString(indent: '  ');
+final parsed = JsonSchema.fromJson(jsonValue);
+```
+
+The builder translates tuple keywords, identifiers, definitions, exclusive
+bounds, dependencies, and historical property-presence rules for the selected
+draft. Unsupported typed options throw `SchemaException`. Use `keywords` for
+annotations and extensions. Parsing and serialization preserve unknown keywords
+and JSON semantics, including boolean schemas and null constants.
+
+## Generate Dart code for known schemas
+
+```dart
+final source = SchemaCodeGenerator(schema).generate(className: 'RecordValidator');
+// Save source as a Dart file and run dart format on it.
+```
+
+The generated class exposes `isValid`, `validate`, and `errors`. It emits direct
+Dart expressions and loops for supported schemas and compiles diagnostics
+lazily. Schemas requiring unsupported specialized checks use the runtime engine.
+Custom options also select that engine so extensions and overrides keep their
+semantics. `isSpecialized` reports which backend is active. The generated code
+depends only on this package; no runtime source compilation or FFI is involved.
+
+## Published drafts
+
+| Specification | Selection | Important differences |
+| --- | --- | --- |
+| Draft 00 | `SchemaDraft.draft0` | `optional`, `requires`, equality flags, `maxDecimal`, `extends`, `disallow` |
+| Draft 01 | `SchemaDraft.draft1` | Corrected original specification |
+| Draft 02 | `SchemaDraft.draft2` | `divisibleBy` and `uniqueItems` |
+| Draft 03 | `SchemaDraft.draft3` | Property-level `required`, `dependencies`, `patternProperties` |
+| Draft 04 | `SchemaDraft.draft4` | Required-name arrays, boolean exclusive bounds, combinators |
+| Draft 05 documents | `SchemaDraft.draft4` | Reuses the Draft 04 dialect and meta-schema |
+| Draft 06 | `SchemaDraft.draft6` | Boolean schemas, `$id`, numeric exclusive bounds, `const`, `contains` |
+| Draft 07 | `SchemaDraft.draft7` | `if`, `then`, `else` |
+| 2019-09 | `SchemaDraft.draft201909` | Vocabularies, recursive references, unevaluated applicators |
+| 2020-12 | `SchemaDraft.draft202012` | Dynamic references, `prefixItems`, revised `contains` annotations |
+
+`$schema` selects the dialect when parsing. Undeclared documents default to
+2020-12. The `draft` argument overrides the root declaration; an explicit
+`SchemaOptions.draft` takes precedence during compilation. Nested resources can
+declare their dialect. Undeclared resources inherit the root draft unless
+`SchemaOptions.defaultDraft` is supplied.
+In 2019-09 and 2020-12, nested dialect declarations require a separate resource
+identifier. The builder enforces this when embedding a schema from another
+dialect. Core URI values and modern identifier fragments are checked during
+compilation under the `validateSchema` policy.
+
+See [the original sample documents](example/schemas) and
+[the executable all-drafts example](example/all_drafts.dart). This table describes
+implemented dispatch and keywords. All 9,361 official cases for the published
+drafts pass in each validation mode, including optional cases under their
+documented policies. Drafts 00 through 02 have original specification-derived
+tests. Details are recorded in [the support report](docs/conformance.md).
+
+## References and resources
+
+```dart
+final validator = JsonSchema.fromJson({r'$ref': 'value.json'}).compile(
+  baseUri: Uri.parse('https://example.com/root.json'),
+  options: SchemaOptions(resources: {
+    Uri.parse('https://example.com/value.json'): {'type': 'integer'},
+  }),
+);
+```
+
+URI resolution, escaped JSON Pointers, anchors, and recursive/dynamic references
+are compiled before validation. Missing resources or fragments throw
+`ReferenceException`. Use `compileAsync` with `SchemaOptions.resolver` to retrieve
+decoded schema resources during preparation. Each missing retrieval URI is
+loaded once. The core has no automatic network or filesystem access.
+Published dialect meta-schemas and the 2019-09/2020-12 vocabulary meta-schemas
+are available locally through their standard URIs. Their keyword grammars are
+implemented originally in Dart.
+
+## Formats, vocabularies, and extensions
+
+Formats are annotations by default. Enable assertions explicitly:
+
+```dart
+final validator = JsonSchema.build(type: SchemaType.string, format: 'email')
+    .compile(options: SchemaOptions(assertFormats: true));
+```
+
+Built-in checks include dates, times, durations, email, hostnames, IPv4/IPv6,
+URI/IRI references, URI templates, UUIDs, JSON Pointers, and regular expressions.
+International hostnames use an original Punycode/IDNA implementation with
+generated Unicode 15.1 facts, normalization, joining context, and bidi checks.
+Unknown formats are ignored in annotation dialects; `SchemaOptions.formats`
+adds or overrides checks.
+
+`SchemaOptions.keywords` registers application-defined assertions. Unknown
+required vocabularies are rejected unless registered in
+`SchemaOptions.vocabularies`. Register custom meta-schemas as resources and parse
+their schemas with the corresponding published base `draft`. Their vocabulary
+declarations control active built-in keywords. The 2020-12 Format-Assertion
+vocabulary enforces formats and rejects unknown format names during compilation,
+including when declared optional. A required 2019-09 Format vocabulary defaults
+to assertions; `assertFormats: false` explicitly disables those assertions.
+
+Content and metadata keywords are annotations by default. Enable
+`SchemaOptions(assertContent: true)` for optional Draft 07 JSON/base64 assertions.
+Content keywords remain annotations in 2019-09 and 2020-12.
+`SchemaOptions(legacyDependencies: true)` enables the retired `dependencies`
+keyword in those modern dialects as an explicit compatibility extension.
+Compilation checks keyword
+syntax by default, including definitions and inactive branches. Registered
+custom meta-schemas can impose additional constraints, including constraints on
+nested schemas through dynamic or recursive meta-schema references. These
+checks run once during preparation and can be disabled with
+`SchemaOptions(validateSchema: false)` for trusted schemas.
+
+## Numeric representations
+
+`multipleOf` uses exact decimal arithmetic over the supplied number's decimal
+representation. Ordinary coefficients use bounded integer arithmetic; larger
+values use `BigInt`. No epsilon is used: `0.3` is a multiple of `0.1`, while
+`0.30000000000000004` is not.
+
+`JsonSchema.parse` and `decodeJson` preserve integers beyond the portable exact
+range as `BigInt`. Decimals that would round or overflow use `JsonNumber`, which
+stores a decimal coefficient and scale. Bounds, equality, uniqueness, and
+multiples understand all three representations. Use `encodeJson` for instances
+containing exact numbers; `JsonSchema.toJsonString` handles them automatically.
+
+```dart
+final schema = JsonSchema.parse('{"type":"integer","minimum":9007199254740993}');
+final instance = decodeJson('9007199254740993');
+print(schema.compile().isValid(instance)); // true, on VM and JavaScript.
+```
+
+Precision lost before validation cannot be recovered. Ordinary JavaScript
+numbers also lose the integer-versus-integral-double distinction used by Draft
+04 and earlier. `decodeJson` preserves that distinction for decimal literals
+on JavaScript using `JsonNumber`. Decimal exponents must fit the supported Dart
+integer representation; memory and input size still bound exact arithmetic.
+
+## Development and measurements
+
+```sh
+dart pub get
+dart format lib test example benchmark tool
+dart analyze
+dart test
+dart run example/all_drafts.dart
+dart run benchmark/validation.dart
+```
+
+Benchmarks independently measure compilation, valid/invalid boolean checks,
+first errors, and all errors after warmup across repeated samples. See
+[performance measurements](docs/performance.md) for commands and measured scope.
+
+The conformance harness reads the official JSON Schema Test Suite from an
+external directory, retaining its license there. Third-party fixtures and
+copyright notices are not vendored into this repository.
