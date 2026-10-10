@@ -1,0 +1,42 @@
+{
+    "jit":  {
+                "sdk":  "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+                "platform":  "windows",
+                "mode":  "JIT",
+                "iterations":  200000,
+                "samples":  7,
+                "instancePool":  64,
+                "fixture":  "Nullable nonempty string, with null/string valid pool and empty-string/integer invalid pool.",
+                "results":  {
+                                "typeList":  {
+                                                 "validNs":  68.87,
+                                                 "invalidNs":  53.475
+                                             },
+                                "anyOf":  {
+                                              "validNs":  72.78,
+                                              "invalidNs":  63.39
+                                          }
+                            },
+                "sink":  2900000
+            },
+    "aot":  {
+                "sdk":  "3.13.5 (stable) (Tue Sep 29 01:00:52 2026 -0700) on \"windows_x64\"",
+                "platform":  "windows",
+                "mode":  "AOT",
+                "iterations":  200000,
+                "samples":  7,
+                "instancePool":  64,
+                "fixture":  "Nullable nonempty string, with null/string valid pool and empty-string/integer invalid pool.",
+                "results":  {
+                                "typeList":  {
+                                                 "validNs":  74.1,
+                                                 "invalidNs":  62.57
+                                             },
+                                "anyOf":  {
+                                              "validNs":  75.11,
+                                              "invalidNs":  74.465
+                                          }
+                            },
+                "sink":  2900000
+            }
+}

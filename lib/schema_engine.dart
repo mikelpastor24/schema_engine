@@ -8,4 +8,5 @@ export 'src/json_codec.dart' show decodeJson, encodeJson;
 export 'src/json_number.dart' show JsonNumber;
 export 'src/options.dart';
 export 'src/schema.dart';
+export 'src/schema_definition.dart';
 export 'src/validator.dart' show CompiledSchema;

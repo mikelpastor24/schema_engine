@@ -5,6 +5,11 @@ import 'package:schema_engine/schema_engine.dart';
 /// Generates original schema fixtures used to compare both validation backends.
 void main() {
   final documents = <String, JsonSchema>{
+    'GeneratedDeclarative': object({
+      'name': string().min(1),
+      'age': integer().nonnegative().optional(),
+      'note': string().min(1).nullable(),
+    }).toJsonSchema(),
     'GeneratedBigNumber': JsonSchema.parse(
       '{"type":"integer","minimum":9007199254740993}',
     ),

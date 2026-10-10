@@ -67,6 +67,21 @@ versus 26 ns. See [the complete before/after measurements](format_optimization_r
 Other formats are recorded as controls; they do not support a uniform speedup
 claim. The latest complete format measurements are in `benchmark_results.json`.
 
+## Declarative generation
+
+Declarations generate ordinary JsonSchema documents and return the same
+CompiledSchema engine. There is no declaration traversal during validation.
+Typed nullable declarations use a type list instead of a general `anyOf`
+combinator. Raw schemas and literals retain a union so their assertions cannot
+accidentally reject the added null alternative.
+
+`benchmark/declarative.dart` compares equivalent nullable nonempty-string
+schemas using two pools of 64 inputs, seven samples, and 200,000 checks per
+sample. The AOT medians were 74 ns versus 75 ns for valid inputs and 63 ns versus
+74 ns for invalid inputs. The valid-input difference is too small to support a
+meaningful speedup claim. Results are limited to these fixtures; see
+[the complete record](declarative_benchmark_results.json).
+
 ## Reproduce
 
 ```sh
@@ -75,12 +90,15 @@ dart format test/generated_validators.dart
 dart run benchmark/validation.dart 50000
 dart run benchmark/generated.dart
 dart run benchmark/formats.dart
+dart run benchmark/declarative.dart
 dart compile aot-snapshot benchmark/validation.dart -o build/validation.aot
 dartaotruntime build/validation.aot 50000
 dart compile aot-snapshot benchmark/generated.dart -o build/generated.aot
 dartaotruntime build/generated.aot
 dart compile aot-snapshot benchmark/formats.dart -o build/formats.aot
 dartaotruntime build/formats.aot
+dart compile aot-snapshot benchmark/declarative.dart -o build/declarative.aot
+dartaotruntime build/declarative.aot
 ```
 
 The scripts also write JSON records under `build/`. Compare on the same SDK,

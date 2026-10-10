@@ -12,6 +12,7 @@ import '../test/conformance_regressions_test.dart' as regressions;
 import '../test/core_resources_test.dart' as core;
 import '../test/draft_semantics_test.dart' as semantics;
 import '../test/formats_and_vocabularies_test.dart' as formats;
+import '../test/schema_definition_test.dart' as definitions;
 import '../test/schema_engine_test.dart' as tests;
 
 /// Runs the same unit tests in-process when OS signal subscriptions are denied.
@@ -26,6 +27,7 @@ Future<void> main() async {
   declarer.declare(generation.main);
   declarer.declare(core.main);
   declarer.declare(regressions.main);
+  declarer.declare(definitions.main);
   final suite = Suite(declarer.build(), SuitePlatform(Runtime.vm));
   var passed = 0;
   var failed = 0;

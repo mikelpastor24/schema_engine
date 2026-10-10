@@ -25,7 +25,7 @@ void main() {
       "additionalProperties": false
     }
   ''');
-  final validator = schema.compile();
+  final validator = document.compile();
 
   print(validator.isValid({'name': 'Example', 'age': 30})); // true
   print(validator.validate({'age': 30})); // First error, or null if valid.
@@ -45,6 +45,82 @@ Schema documents are copied and frozen, so changing an original map cannot
 change an already compiled validator.
 Use `decodeJson` for JSON text whose large integers or precise decimals must
 remain exact. The validators also accept `BigInt` and `JsonNumber` values.
+
+## Declare schemas with a concise API
+
+Use a Dart import namespace to compose immutable declarations:
+
+```dart
+import 'package:schema_engine/schema_engine.dart' as schema;
+
+void main() {
+  final user = schema.object({
+    'name': schema.string().min(1),
+    'age': schema.integer().min(0).optional(),
+    'email': schema.string().email().optional(),
+    'tags': schema.array(schema.string()).max(10).optional(),
+  });
+
+  final document = user.toJsonSchema(draft: schema.SchemaDraft.draft202012);
+  print(document.toJsonString(indent: '  '));
+
+  final validator = user.compile(options: schema.SchemaOptions(assertFormats: true));
+  print(validator.isValid({'name': 'Example'})); // true
+  print(validator.isValid({})); // false: name is required.
+}
+```
+
+The construction style is inspired by [Zod](https://zod.dev/api), with an original
+Dart implementation. Every property is required by default. Objects reject
+additional properties; `.passthrough()` permits them, while `.catchall(definition)`
+validates their values. Validation never strips properties or transforms input.
+The default closed shape matches [Zod's JSON Schema output](https://zod.dev/json-schema).
+
+`.optional()` allows an absent object property, `.nullable()` accepts null, and
+`.nullish()` permits both. Optional markers do not affect root values or array
+elements. `.defaultValue(value)` adds an annotation without filling missing
+properties or making them optional. All modifiers return new declarations.
+
+| Constructor or modifier | Purpose |
+| --- | --- |
+| `schema.string().min(1).max(100)` | Unicode code-point length bounds |
+| `schema.string().pattern(r'^[a-z]+$')` | JSON Schema regular-expression checks |
+| `schema.number().gt(0).multipleOf(0.5)` | Exclusive bounds and exact multiples |
+| `schema.integer()` or `schema.number().int()` | Draft-specific integer constraints |
+| `schema.boolean()`, `schema.nullValue()` | Boolean and null values |
+| `schema.array(schema.string()).nonempty()` | Homogeneous arrays |
+| `schema.tuple([schema.string(), schema.integer()]).rest(schema.boolean())` | Tuples with required positions and optional rest |
+| `schema.record(schema.number())` | Objects with constrained property values |
+| `schema.literal('ready')`, `schema.enumValues(['ready', 'pending'])` | Constants and string enumerations |
+| `schema.union([schema.string(), schema.number()])`, `definition.or(other)` | Alternatives |
+| `schema.intersection(left, right)`, `definition.and(other)` | Independent conjunctions |
+| `schema.any()`, `schema.never()` | Arbitrary or impossible JSON values |
+
+Object shapes support `.extend({...})`, `.pick(['name'])`, `.omit(['age'])`,
+`.partial()`, and `.required()`. The last two accept `keys: [...]` for selected
+properties and operate only on the current shape. Use `.extend()` to combine
+closed shapes: an intersection validates each shape independently.
+
+Generate a document with `.toJsonSchema(draft: ...)`, JSON values with
+`.toJson(draft: ...)`, or text with `.toJsonString(draft: ..., indent: '  ')`.
+The same declaration can target every published draft. Generation translates
+presence rules, tuples, unions, exclusive bounds, and literal spelling. Features
+absent from a selected dialect throw `SchemaException`, such as numeric multiples
+in Draft 00/01 or unique arrays before Draft 02.
+
+Compile once with `.compile()` or `.compileAsync()` and reuse the resulting
+`CompiledSchema`. `SchemaOptions.draft` selects the generation target too.
+The declaration layer delegates to the existing engine and adds no work during
+instance validation. `SchemaCodeGenerator` accepts the resulting `JsonSchema`.
+
+Use `.describe(text)`, `.defaultValue(value)`, and `.withKeywords({...})` after
+typed constraints to add annotations or extensions. Raw keywords may override
+generated assertions; compilation checks their syntax. `schema.fromSchema(document)`
+embeds an existing document for the same selected draft, preserving references
+and less common features. These declarations generate JSON Schemas; they do not
+perform TypeScript type inference, coercion, or data transformation.
+
+See [the executable declaration example](example/declarative.dart).
 
 ## Build schemas with typed arguments
 

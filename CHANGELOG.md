@@ -1,5 +1,10 @@
 ## 0.0.1
 
+* Add an immutable declarative API with concise scalar/object/array constructors,
+  optional and nullable properties, shape operations, tuples, and composition.
+* Generate declarative schemas for every published draft and compile through
+  the existing validation engine, with no instance-time declaration traversal.
+
 * Replace the Flutter template with a portable, dependency-free Dart core.
 * Add immutable parsing, serialization, and dialect-aware schema construction.
 * Add published-draft dispatch, including historical Draft 00 through Draft 03.

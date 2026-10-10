@@ -2,6 +2,120 @@
 import 'package:schema_engine/schema_engine.dart' as engine;
 
 /// Validates the embedded schema with generated boolean checks and diagnostics.
+final class GeneratedDeclarative {
+  /// Creates a reusable validator with a lazily compiled diagnostic fallback.
+  GeneratedDeclarative({this.options}) : isSpecialized = options == null;
+
+  static const _document = <String, Object?>{
+    "additionalProperties": false,
+    "\$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": <String, Object?>{
+      "name": <String, Object?>{"type": "string", "minLength": 1},
+      "age": <String, Object?>{"type": "integer", "minimum": 0},
+      "note": <String, Object?>{
+        "type": <Object?>["string", "null"],
+        "minLength": 1,
+      },
+    },
+    "required": <Object?>["name", "note"],
+  };
+
+  /// Options for the runtime backend, or null to use dialect defaults.
+  final engine.SchemaOptions? options;
+  engine.CompiledSchema? _compiled;
+  engine.CompiledSchema get _runtime =>
+      _compiled ??= engine.JsonSchema.fromJson(
+        _document,
+        draft: engine.SchemaDraft.draft202012,
+      ).compile(options: options);
+
+  /// Whether the generated boolean backend is active for this instance.
+  final bool isSpecialized;
+
+  /// Checks an instance, without constructing diagnostics.
+  bool isValid(Object? value) =>
+      isSpecialized ? _check0(value) : _runtime.isValid(value);
+
+  /// Returns the first assertion error, or null for a valid instance.
+  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+
+  /// Returns all assertion errors for the instance.
+  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+
+  engine.CompiledSchema? _exact2;
+  bool _check0(Object? value) {
+    if (!((value is Map<Object?, Object?> &&
+        (value is Map<String, Object?> ||
+            value.keys.every((key) => key is String))))) {
+      return false;
+    }
+    if (!value.containsKey("name")) {
+      return false;
+    }
+    if (!value.containsKey("note")) {
+      return false;
+    }
+    if (value.containsKey("name") && !_check1(value["name"])) {
+      return false;
+    }
+    if (value.containsKey("age") && !_check2(value["age"])) {
+      return false;
+    }
+    if (value.containsKey("note") && !_check3(value["note"])) {
+      return false;
+    }
+    for (final key in value.keys) {
+      final covered = key == "name" || key == "age" || key == "note";
+      if (!covered && !_check4(value[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _check1(Object? value) {
+    if (value is! String) {
+      return false;
+    }
+    if (!(value.isNotEmpty)) {
+      return false;
+    }
+    return true;
+  }
+
+  bool _check2(Object? value) {
+    if (value is! num && (value is BigInt || value is engine.JsonNumber)) {
+      return (_exact2 ??= engine.JsonSchema.fromJson(<String, Object?>{
+        "type": "integer",
+        "minimum": 0,
+      }, draft: engine.SchemaDraft.draft202012).compile()).isValid(value);
+    }
+    if (!((value is num &&
+        (value is int ||
+            value.isFinite && value == value.truncateToDouble())))) {
+      return false;
+    }
+    if (!(value >= 0)) {
+      return false;
+    }
+    return true;
+  }
+
+  bool _check3(Object? value) {
+    if (!(value is String || value == null)) {
+      return false;
+    }
+    if (!(value is! String || (value.isNotEmpty))) {
+      return false;
+    }
+    return true;
+  }
+
+  bool _check4(Object? value) => false;
+}
+
+/// Validates the embedded schema with generated boolean checks and diagnostics.
 final class GeneratedBigNumber {
   /// Creates a reusable validator with a lazily compiled diagnostic fallback.
   GeneratedBigNumber({this.options}) : isSpecialized = false;
