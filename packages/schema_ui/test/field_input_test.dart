@@ -14,6 +14,146 @@ TextEditingValue _editing(String text) => TextEditingValue(
 );
 
 void main() {
+  testWidgets('invalid numeric text displays the compiled schema diagnostic', (
+    tester,
+  ) async {
+    final key = GlobalKey<FormState>();
+    final document = schema.object({
+      'a/b~c': schema.number().min(1),
+    }).toJsonSchema();
+    final validator = document.compile();
+    Object? saved;
+    var changes = 0;
+    await tester.pumpWidget(
+      _host(
+        Form(
+          key: key,
+          child: SchemaForm(
+            schema: document,
+            initialValue: {'a/b~c': 2},
+            onChanged: (_) => changes++,
+            onSaved: (value) => saved = value,
+          ),
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextFormField), '-');
+    expect(key.currentState!.validate(), isFalse);
+    await tester.pump();
+    final expected = validator.validate({'a/b~c': '-'})!;
+    expect(expected.keyword, 'type');
+    expect(expected.instancePath, '/a~1b~0c');
+    expect(
+      tester
+          .widget<InputDecorator>(find.byType(InputDecorator))
+          .decoration
+          .errorText,
+      expected.message,
+    );
+    expect(
+      find.text('${expected.instancePath}: ${expected.message}'),
+      findsOneWidget,
+    );
+    key.currentState!.save();
+    expect(saved, {'a/b~c': 2});
+    expect(changes, 0);
+    await tester.enterText(find.byType(TextFormField), '3');
+    expect(key.currentState!.validate(), isTrue);
+    key.currentState!.save();
+    expect(saved, {'a/b~c': 3});
+    expect(changes, 1);
+  });
+
+  testWidgets('independent numeric parsing errors clear only when corrected', (
+    tester,
+  ) async {
+    final key = GlobalKey<FormState>();
+    await tester.pumpWidget(
+      _host(
+        Form(
+          key: key,
+          child: SchemaForm(
+            schema: schema.object({
+              'first': schema.number(),
+              'second': schema.number(),
+            }).toJsonSchema(),
+            initialValue: {'first': 1, 'second': 2},
+          ),
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextFormField).first, '-');
+    await tester.enterText(find.byType(TextFormField).last, '1e-');
+    expect(key.currentState!.validate(), isFalse);
+    await tester.enterText(find.byType(TextFormField).first, '3');
+    expect(key.currentState!.validate(), isFalse);
+    await tester.pump();
+    final error = schema.number().compile().validate('1e-')!;
+    expect(
+      tester
+          .widget<InputDecorator>(find.byType(InputDecorator).last)
+          .decoration
+          .errorText,
+      error.message,
+    );
+    await tester.enterText(find.byType(TextFormField).last, '4');
+    expect(key.currentState!.validate(), isTrue);
+  });
+
+  testWidgets(
+    'numeric syntax still fails when the validation vocabulary is inactive',
+    (tester) async {
+      final key = GlobalKey<FormState>();
+      final metaUri = Uri.parse('https://example.com/numeric-ui-meta');
+      final document = schema.JsonSchema.fromJson({
+        r'$schema': metaUri.toString(),
+        'type': 'number',
+      }, draft: schema.SchemaDraft.draft202012);
+      final options = schema.SchemaOptions(
+        resources: {
+          metaUri: {
+            r'$schema': schema.SchemaDraft.draft202012.metaSchemaUri,
+            r'$vocabulary': {
+              'https://json-schema.org/draft/2020-12/vocab/core': true,
+            },
+          },
+        },
+      );
+      expect(document.compile(options: options).isValid('-'), isTrue);
+      await tester.pumpWidget(
+        _host(
+          Form(
+            key: key,
+            child: SchemaForm(
+              schema: document,
+              options: options,
+              initialValue: 2,
+            ),
+          ),
+        ),
+      );
+      await tester.enterText(find.byType(TextFormField), '-');
+      expect(key.currentState!.validate(), isFalse);
+      await tester.pump();
+      String? message;
+      try {
+        schema.decodeJson('-');
+      } on FormatException catch (error) {
+        message = error.message;
+      }
+      expect(message, isNotNull);
+      expect(
+        tester
+            .widget<InputDecorator>(find.byType(InputDecorator))
+            .decoration
+            .errorText,
+        message,
+      );
+      await tester.enterText(find.byType(TextFormField), '3');
+      expect(key.currentState!.validate(), isTrue);
+    },
+  );
+
   for (final integer in [true, false]) {
     testWidgets(
       '${integer ? 'integer' : 'number'} selects its numeric keyboard',
@@ -198,6 +338,15 @@ void main() {
       for (final text in ['', '-', '.', '-.', '1.', '1e', '1e-', '1e+']) {
         await tester.enterText(find.byType(TextFormField), text);
         expect(key.currentState!.validate(), isFalse, reason: text);
+        await tester.pump();
+        final error = schema.number().compile().validate(text)!;
+        expect(
+          tester
+              .widget<InputDecorator>(find.byType(InputDecorator))
+              .decoration
+              .errorText,
+          error.message,
+        );
         key.currentState!.save();
         expect(saved, 12);
         expect(changed, isNull);
@@ -237,18 +386,18 @@ void main() {
     'numeric bounds and multiples stay visible as validation errors',
     (tester) async {
       final key = GlobalKey<FormState>();
+      final document = schema
+          .number()
+          .min(0)
+          .max(10)
+          .multipleOf(0.5)
+          .toJsonSchema();
+      final validator = document.compile();
       await tester.pumpWidget(
         _host(
           Form(
             key: key,
-            child: SchemaForm(
-              schema: schema
-                  .number()
-                  .min(0)
-                  .max(10)
-                  .multipleOf(0.5)
-                  .toJsonSchema(),
-            ),
+            child: SchemaForm(schema: document),
           ),
         ),
       );
@@ -256,6 +405,14 @@ void main() {
         await tester.enterText(find.byType(TextFormField), text);
         expect(find.text(text), findsOneWidget);
         expect(key.currentState!.validate(), isFalse);
+        await tester.pump();
+        expect(
+          tester
+              .widget<InputDecorator>(find.byType(InputDecorator))
+              .decoration
+              .errorText,
+          validator.validate(schema.decodeJson(text))!.message,
+        );
       }
       await tester.enterText(find.byType(TextFormField), '0,5');
       expect(key.currentState!.validate(), isTrue);

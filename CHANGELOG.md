@@ -1,5 +1,7 @@
 ## Unreleased
 
+* Replace fixed numeric input errors with schema_engine validation diagnostics.
+
 * Separate schema_ui text and numeric editors with automatic keyboard selection
   and input formatters, preserving exact numbers and schema validation.
 

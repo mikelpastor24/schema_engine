@@ -61,13 +61,14 @@ class _SchemaNumberFieldState extends State<_SchemaNumberField> {
     }
     try {
       final decoded = decodeJson(source);
-      if (_isNumber(decoded)) {
-        widget.field.onChanged(decoded);
-      } else {
-        widget.field.setInputError('Enter a JSON number.');
+      if (!_isNumber(decoded)) {
+        // A composed value can decode as another JSON type. Ask the engine's
+        // numeric parser for its syntax diagnostic rather than inventing one.
+        JsonNumber.parse(source);
       }
-    } on FormatException {
-      widget.field.setInputError('Enter a JSON number.');
+      widget.field.onChanged(decoded);
+    } on FormatException catch (error) {
+      widget.field._setInvalidInput(text, error.message);
     }
   }
 }

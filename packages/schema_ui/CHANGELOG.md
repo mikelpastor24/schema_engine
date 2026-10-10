@@ -1,5 +1,9 @@
 ## 0.0.1
 
+* Show compiled schema diagnostics for unparseable numeric input while keeping
+  the last decoded instance value; use decoder diagnostics when no assertion
+  applies.
+
 * Separate text, numeric, and JSON editors; select format-aware text keyboards
   and signed integer/decimal keyboards automatically.
 * Add numeric formatters that preserve partial edits and IME composition,

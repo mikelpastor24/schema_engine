@@ -79,6 +79,13 @@ in an instance are retained; newly entered integer text uses integer notation.
 Bounds and `multipleOf` remain validator checks, and numeric keyboards keep the
 minus sign available so invalid negative values can be corrected explicitly.
 
+When numeric text cannot be decoded, validation checks a temporary document
+containing that text at the field's JSON Pointer and displays the engine's
+diagnostic, usually the `type` assertion. The saved instance still retains the
+last decoded value. If the schema accepts the text, for example because its
+validation vocabulary is inactive, the engine's decoder diagnostic reports the
+parsing failure. Messages are not hardcoded in the numeric widget.
+
 Strings use a single-line formatter and a text keyboard, with email keyboards
 for `email`/`idn-email`, URL keyboards for URI/IRI formats, and date/time keyboards
 for `date`, `time`, and `date-time`. These hints also apply when formats are

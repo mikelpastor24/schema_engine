@@ -24,7 +24,8 @@ typedef SchemaWidgetBuilder = Widget Function(
 final class SchemaField {
   SchemaField._(
     this._errorText,
-    this._errors, {
+    this._errors,
+    this._setInvalidInput, {
     required this.schema,
     required this.instancePath,
     required this.value,
@@ -75,8 +76,12 @@ final class SchemaField {
 
   final String? Function() _errorText;
   final List<ValidationError> Function() _errors;
+  final void Function(String text, String parsingMessage) _setInvalidInput;
 
   /// Current engine diagnostics located exactly at [instancePath].
+  ///
+  /// Temporary invalid editor input participates in validation while [value]
+  /// retains the last successfully decoded JSON value.
   List<ValidationError> get errors => _errors();
 
   /// A validator suitable for a custom Flutter [FormField].
@@ -171,6 +176,7 @@ class _SchemaFormState extends State<SchemaForm> {
   Object? _initial;
   List<ValidationError>? _errors;
   final _inputErrors = <String, String>{};
+  final _invalidInputs = <String, ({String text, String parsingMessage})>{};
   final _versions = <String, int>{};
   var _generation = 0;
   var _resetting = false;
@@ -191,6 +197,7 @@ class _SchemaFormState extends State<SchemaForm> {
     _value = _initial;
     _errors = null;
     _inputErrors.clear();
+    _invalidInputs.clear();
     _versions.clear();
   }
 
@@ -214,8 +221,16 @@ class _SchemaFormState extends State<SchemaForm> {
     }
   }
 
-  List<ValidationError> get _diagnostics =>
-      _errors ??= _validator.errors(_value);
+  List<ValidationError> get _diagnostics {
+    if (_errors case final List<ValidationError> errors) {
+      return errors;
+    }
+    var candidate = _value;
+    for (final entry in _invalidInputs.entries) {
+      candidate = _replace(candidate, _segments(entry.key), entry.value.text);
+    }
+    return _errors = _validator.errors(candidate);
+  }
 
   String? _rootError() {
     if (_inputErrors.isNotEmpty) {
@@ -224,6 +239,11 @@ class _SchemaFormState extends State<SchemaForm> {
     }
     final errors = _diagnostics;
     if (errors.isEmpty) {
+      if (_invalidInputs.isNotEmpty) {
+        final entry = _invalidInputs.entries.first;
+        return '${entry.key.isEmpty ? '/' : entry.key}: '
+            '${entry.value.parsingMessage}';
+      }
       return null;
     }
     final first = errors.first;
@@ -251,7 +271,7 @@ class _SchemaFormState extends State<SchemaForm> {
         return error.message;
       }
     }
-    return null;
+    return _invalidInputs[path]?.parsingMessage;
   }
 
   void _change(
@@ -271,6 +291,10 @@ class _SchemaFormState extends State<SchemaForm> {
         (key, _) =>
             key == path || clearDescendantErrors && key.startsWith('$path/'),
       );
+      _invalidInputs.removeWhere(
+        (key, _) =>
+            key == path || clearDescendantErrors && key.startsWith('$path/'),
+      );
       if (structure) {
         _versions[path] = (_versions[path] ?? 0) + 1;
       }
@@ -284,11 +308,26 @@ class _SchemaFormState extends State<SchemaForm> {
       return;
     }
     setState(() {
+      if (_invalidInputs.remove(path) != null) {
+        _errors = null;
+      }
       if (error == null) {
         _inputErrors.remove(path);
       } else {
         _inputErrors[path] = error;
       }
+    });
+    _rootKey.currentState?.didChange(_value);
+  }
+
+  void _setInvalidInput(String path, String text, String parsingMessage) {
+    if (!widget.enabled || _resetting) {
+      return;
+    }
+    setState(() {
+      _invalidInputs[path] = (text: text, parsingMessage: parsingMessage);
+      _inputErrors.remove(path);
+      _errors = null;
     });
     _rootKey.currentState?.didChange(_value);
   }
@@ -301,6 +340,7 @@ class _SchemaFormState extends State<SchemaForm> {
     setState(() {
       _value = _initial;
       _inputErrors.clear();
+      _invalidInputs.clear();
       _errors = null;
       _generation++;
     });
@@ -369,6 +409,11 @@ class _SchemaFormState extends State<SchemaForm> {
       () => List.unmodifiable(
         _diagnostics.where((error) => error.instancePath == path),
       ),
+      (text, parsingMessage) {
+        if (enabled) {
+          _setInvalidInput(path, text, parsingMessage);
+        }
+      },
       schema: plan.schema,
       instancePath: path,
       value: value,

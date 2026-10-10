@@ -242,7 +242,14 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '-');
       expect(key.currentState!.validate(), isFalse);
       await tester.pump();
-      expect(find.text('Enter a JSON number.'), findsOneWidget);
+      final error = schema.integer().compile().validate('-')!;
+      expect(
+        tester
+            .widget<InputDecorator>(find.byType(InputDecorator))
+            .decoration
+            .errorText,
+        error.message,
+      );
       expect(changed, BigInt.parse('9007199254740993'));
       await tester.enterText(find.byType(TextFormField), '1.5');
       expect(key.currentState!.validate(), isFalse);
