@@ -1,5 +1,8 @@
 ## 0.0.1
 
+* Decode trailing numeric dots and commas as whole values while preserving
+  editor text, exact numbers, and schema validation.
+
 * Re-export ValidationErrorCodes for constant-based form message catalogs.
 
 * Display the engine's specific, localizable validation diagnostics, including

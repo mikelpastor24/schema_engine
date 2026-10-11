@@ -56,6 +56,14 @@ class _SchemaNumberFieldState extends State<_SchemaNumberField> {
       return;
     }
     var source = text.replaceAll(',', '.');
+    // Decode a whole value with a trailing separator while keeping that
+    // separator in the editor so the user can continue entering a fraction.
+    if (source.endsWith('.') && source != '.' && source != '-.') {
+      source = source.substring(0, source.length - 1);
+      if (!widget.integer) {
+        source = '$source.0';
+      }
+    }
     // Decimal keyboards can start a fraction with its separator. Add the
     // required JSON zero only when decoding; keep the user's caret unchanged.
     if (source.startsWith('.')) {
@@ -83,7 +91,7 @@ class _NumberInputFormatter extends TextInputFormatter {
   final bool integer;
   TextEditingValue? _beforeComposition;
 
-  static final _integerInput = RegExp(r'-?(?:0|[1-9][0-9]*)?');
+  static final _integerInput = RegExp(r'-?(?:(?:0|[1-9][0-9]*)[.,]?)?');
   static final _decimalInput = RegExp(
     r'-?(?:(?:0|[1-9][0-9]*)(?:[.,][0-9]*)?(?:[eE][+-]?[0-9]*)?'
     r'|[.,][0-9]*(?:[eE][+-]?[0-9]*)?)?',

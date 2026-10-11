@@ -176,7 +176,19 @@ void main() {
         final formatter = field.inputFormatters!.single;
         final oldValue = _editing('12');
         final accepted = integer
-            ? ['', '-', '0', '-0', '42', '-42', '9007199254740993']
+            ? [
+                '',
+                '-',
+                '0',
+                '-0',
+                '42',
+                '-42',
+                '12.',
+                '12,',
+                '-12.',
+                '-12,',
+                '9007199254740993',
+              ]
             : [
                 '',
                 '-',
@@ -234,6 +246,76 @@ void main() {
             same(oldValue),
             reason: 'Reject the complete edit: $text',
           );
+        }
+      },
+    );
+
+    testWidgets(
+      '${integer ? 'integer' : 'number'} decodes trailing separators',
+      (tester) async {
+        final key = GlobalKey<FormState>();
+        Object? changed;
+        Object? saved;
+        await tester.pumpWidget(
+          _host(
+            Form(
+              key: key,
+              child: SchemaForm(
+                schema: (integer ? schema.integer() : schema.number())
+                    .toJsonSchema(),
+                initialValue: 1,
+                onChanged: (value) => changed = value,
+                onSaved: (value) => saved = value,
+              ),
+            ),
+          ),
+        );
+        await tester.enterText(find.byType(TextFormField), '-');
+        expect(key.currentState!.validate(), isFalse);
+        await tester.pump();
+        for (final text in [
+          '12.',
+          '12,',
+          '-12.',
+          '-12,',
+          '0.',
+          '0,',
+          '9007199254740993.',
+          '9007199254740993,',
+        ]) {
+          await tester.enterText(find.byType(TextFormField), text);
+          final whole = text.substring(0, text.length - 1);
+          final expected = schema.decodeJson(integer ? whole : '$whole.0');
+          expect(
+            schema.encodeJson(changed),
+            schema.encodeJson(expected),
+            reason: text,
+          );
+          if (text == '12.' || text == '12,') {
+            expect(changed, integer ? isA<int>() : isA<double>());
+          }
+          expect(key.currentState!.validate(), isTrue, reason: text);
+          await tester.pump();
+          expect(
+            tester
+                .widget<InputDecorator>(find.byType(InputDecorator))
+                .decoration
+                .errorText,
+            isNull,
+          );
+          final editing = tester
+              .widget<TextField>(find.byType(TextField))
+              .controller!
+              .value;
+          expect(editing.text, text);
+          expect(editing.selection.baseOffset, text.length);
+          key.currentState!.save();
+          expect(schema.encodeJson(saved), schema.encodeJson(expected));
+        }
+        if (!integer) {
+          await tester.enterText(find.byType(TextFormField), '12,5');
+          expect(changed, 12.5);
+          expect(key.currentState!.validate(), isTrue);
         }
       },
     );
@@ -335,7 +417,7 @@ void main() {
           ),
         ),
       );
-      for (final text in ['', '-', '.', '-.', '1.', '1e', '1e-', '1e+']) {
+      for (final text in ['', '-', '.', ',', '-.', '-,', '1e', '1e-', '1e+']) {
         await tester.enterText(find.byType(TextFormField), text);
         expect(key.currentState!.validate(), isFalse, reason: text);
         await tester.pump();
@@ -401,7 +483,13 @@ void main() {
           ),
         ),
       );
-      for (final text in ['-1', '11', '0.3']) {
+      for (final (text, value) in [
+        ('-1', -1),
+        ('-1.', -1.0),
+        ('11', 11),
+        ('11,', 11.0),
+        ('0.3', 0.3),
+      ]) {
         await tester.enterText(find.byType(TextFormField), text);
         expect(find.text(text), findsOneWidget);
         expect(key.currentState!.validate(), isFalse);
@@ -411,7 +499,7 @@ void main() {
               .widget<InputDecorator>(find.byType(InputDecorator))
               .decoration
               .errorText,
-          validator.validate(schema.decodeJson(text))!.message,
+          validator.validate(value)!.message,
         );
       }
       await tester.enterText(find.byType(TextFormField), '0,5');

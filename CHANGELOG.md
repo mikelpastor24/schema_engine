@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Normalize trailing numeric separators in schema_ui integer and number fields
+  without interrupting decimal editing or schema validation.
+
 * Use ValidationError.message for all formatter fallbacks without recursion.
 
 * Expose shared ValidationErrorCodes constants and a keyword registry in the

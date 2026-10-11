@@ -78,15 +78,20 @@ automatic changes to an existing instance.
 
 Text, numeric, and raw JSON editors have separate implementations and input
 policies. Integer fields request a signed integer keyboard and accept a leading
-minus sign and ASCII digits. Number fields request a signed decimal keyboard
-and also accept fractions and scientific notation. A dot or comma can be used
-as the decimal separator; a leading separator such as `.5` is decoded as `0.5`.
+minus sign, ASCII digits, and an optional trailing dot or comma. Number fields
+request a signed decimal keyboard and also accept fractions and scientific
+notation. A dot or comma can be used as the decimal separator; a leading
+separator such as `.5` is decoded as `0.5`.
 Grouping separators are not supported. Exact decoding still preserves large
 integers and precise decimals.
 
+A trailing separator such as `12.` or `12,` is decoded as `12` in integer
+fields and `12.0` in number fields. The editor keeps the typed separator and
+caret position so a decimal fraction can be entered without interruption.
+
 Numeric formatters reject the entire edit for misplaced signs, repeated
 separators, alphabetic text, or other malformed input rather than stripping
-characters into a different number. Partial edits such as `-`, `1.`, or `1e-`
+characters into a different number. Partial edits such as `-`, `.`, or `1e-`
 remain visible and fail form validation until completed. Clearing an optional
 numeric field removes the property instead. IME composition and caret positions
 are preserved. Integral decimal representations already present in an instance
