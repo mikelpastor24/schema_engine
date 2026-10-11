@@ -13,7 +13,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  schema_engine: ^0.0.1
+  schema_engine: ^1.0.0
 
 dev_dependencies:
   flutter_test:

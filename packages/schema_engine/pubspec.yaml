@@ -1,6 +1,6 @@
 name: schema_engine
 description: A portable JSON Schema compiler, validator, parser, and schema builder for Dart.
-version: 0.0.1
+version: 1.0.0
 
 resolution: workspace
 
