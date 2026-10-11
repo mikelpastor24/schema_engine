@@ -2,7 +2,8 @@
 
 A runnable Flutter application demonstrating theme-aware JSON Schema forms,
 optional fields, array editing, a custom multiline biography editor, validation,
-JSON submission, and reset. This application is a member of the repository's
+JSON submission, reset, and synchronized visual/JSON schema authoring. This
+application is a member of the repository's
 Pub workspace and uses the local `schema_engine` and `schema_ui` packages.
 
 ## Run in a browser
@@ -61,6 +62,26 @@ messages and integration with an application's localization system.
 Validation errors include expected types, limits, and format names. Pass a
 shared engine catalog as `SchemaFormMessages(validationError: catalog.format)`
 to customize those diagnostics alongside the form's labels and actions.
+
+## Create or import a schema
+
+Open **Schema builder** from the app bar. On wide screens the visual editor
+appears on the left and the JSON code editor on the right. On narrow screens
+the panels stack vertically. Both use the surrounding Material theme.
+
+Add properties, select their types, mark required fields, configure constraints
+and formats, and create reusable definitions. Visual edits update the formatted
+JSON immediately after a valid change. Edit or paste a Draft 2020-12 schema
+in the JSON panel to replace the visual document, including nested properties,
+array items, and definitions. Unedited keywords without visual controls remain
+in the schema.
+
+Malformed JSON, invalid keyword values, unresolved references, and older drafts
+show an error alongside the code while keeping the current visual document.
+Invalid visual input keeps the last valid JSON until corrected. Export remains
+disabled while either panel has errors. **Format JSON** normalizes formatting,
+**Copy JSON** copies the current document, and **Reset schema** restores the
+sample contact schema.
 
 ## Checks
 

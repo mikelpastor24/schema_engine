@@ -1,5 +1,10 @@
 ## Unreleased
 
+* Add a Draft 2020-12 SchemaEditor with visual properties, types, constraints,
+  formats, nested schemas, reusable definitions, and customizable messages.
+* Add a schema builder example with synchronized visual and editable JSON
+  panels, import errors, formatting, copy, and reset.
+
 * Normalize trailing numeric separators in schema_ui integer and number fields
   without interrupting decimal editing or schema validation.
 

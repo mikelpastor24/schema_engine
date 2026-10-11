@@ -6,7 +6,7 @@ instances. Original implementation, licensed under MIT.
 | Package | Purpose | Runtime requirements |
 | --- | --- | --- |
 | [schema_engine](packages/schema_engine) | Parse, build, serialize, compile, and validate JSON Schema | Dart; no runtime dependencies |
-| [schema_ui](packages/schema_ui) | Generate customizable form fields for editing JSON instances | Flutter and schema_engine |
+| [schema_ui](packages/schema_ui) | Create JSON Schemas visually and generate customizable JSON instance forms | Flutter and schema_engine |
 
 The engine's public import remains `package:schema_engine/schema_engine.dart`.
 Flutter is isolated in `schema_ui`; Dart applications can depend on the engine

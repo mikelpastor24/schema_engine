@@ -1,5 +1,12 @@
 ## 0.0.1
 
+* Add SchemaEditor for creating Draft 2020-12 schemas through themed form
+  controls, including nested properties, array items, constraints, and $defs.
+* Preserve unedited schema keywords, maintain required property names, and
+  update local references when renaming root definitions.
+* Add open SchemaEditorMessages and Form validation/save/reset integration.
+* Demonstrate bidirectional visual and JSON editing with responsive panels.
+
 * Decode trailing numeric dots and commas as whole values while preserving
   editor text, exact numbers, and schema validation.
 

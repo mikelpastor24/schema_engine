@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:schema_engine/schema_engine.dart' as schema;
 import 'package:schema_ui/schema_ui.dart';
 
+import 'schema_builder_screen.dart';
+
 /// Runs a sample schema editor using the surrounding Material theme.
 void main() => runApp(const ExampleApp());
 
-/// Demonstrates default editors and a customized string field.
+/// Demonstrates JSON instance forms and visual JSON Schema authoring.
 class ExampleApp extends StatelessWidget {
   /// Creates the sample application.
   const ExampleApp({super.key, this.messages = const SchemaFormMessages()});
@@ -72,7 +74,20 @@ class _EditorScreenState extends State<_EditorScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Schema forms')),
+    appBar: AppBar(
+      title: const Text('Schema forms'),
+      actions: [
+        TextButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const SchemaBuilderScreen(),
+            ),
+          ),
+          icon: const Icon(Icons.account_tree_outlined),
+          label: const Text('Schema builder'),
+        ),
+      ],
+    ),
     body: SingleChildScrollView(
       padding: EdgeInsets.all(
         Theme.of(context).extension<SchemaUiTheme>()!.spacing,

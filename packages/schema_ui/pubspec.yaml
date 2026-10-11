@@ -1,5 +1,7 @@
 name: schema_ui
-description: Theme-aware, customizable Flutter form fields backed by schema_engine.
+description: >-
+  Visual JSON Schema authoring and themed Flutter instance forms backed by
+  schema_engine.
 version: 0.0.1
 
 resolution: workspace

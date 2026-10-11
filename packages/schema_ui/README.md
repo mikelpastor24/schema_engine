@@ -1,9 +1,97 @@
 # schema_ui
 
-Theme-aware Flutter form fields generated from
+Visual JSON Schema authoring and theme-aware Flutter form fields generated from
 [schema_engine](../schema_engine) JSON Schema documents. Use the same schema to
 build an editor and validate the resulting JSON instance. Requires Flutter 3.47
 and Dart 3.13 or later. Original implementation, licensed under MIT.
+
+## Create a schema visually
+
+Use `SchemaEditor` to author a Draft 2020-12 schema. Start with an empty object,
+add properties and definitions, choose their types, and expand **Constraints
+and annotations** to configure details. The editor emits immutable
+`schema.JsonSchema` documents that can be serialized or passed to `SchemaForm`.
+
+~~~dart
+final schemaKey = GlobalKey<FormState>();
+final builder = Form(
+  key: schemaKey,
+  child: SchemaEditor(
+    onChanged: (document) => print(document.toJsonString(indent: '  ')),
+    onSaved: (document) => print(document.toJson()),
+    autovalidateMode: AutovalidateMode.onUserInteraction,
+  ),
+);
+~~~
+
+The editor adds no nested `Form`. Use the ancestor Form's `validate()`, `save()`,
+and `reset()` methods. Without a Form, `onChanged` still supplies valid schemas.
+Invalid input remains editable, makes the configuration invalid, and does not
+emit or save a replacement document. `onValidityChanged` lets an application
+disable export or explain why its last valid output has not changed. Keyword
+syntax and references are checked by the engine.
+
+Pass an existing document as `schema:` to edit it. A different schema replaces
+the editor's document. Passing the exact `onChanged` result back into `schema`
+preserves active text, caret positions, and focus. This supports a code panel
+that parses a JSON edit and feeds the resulting document back into the editor.
+Root dialects other than Draft 2020-12 are rejected; no migration is performed.
+Boolean schemas retain their boolean representation and carry their dialect
+through `JsonSchema.draft`.
+
+| Schema feature | Visual authoring controls |
+| --- | --- |
+| Types | Object, array, string, integer, number, boolean, null, unrestricted, reference, and rejecting schema |
+| Nullability | Add or remove `null` alongside a single type |
+| Properties | Add, rename, remove, mark required, and edit nested schemas |
+| Strings | Minimum/maximum length, pattern, and format autocomplete |
+| Numbers | Inclusive/exclusive bounds and a positive `multipleOf`, with exact numeric decoding |
+| Objects | Minimum/maximum property count and additional property allow/forbid/schema policy |
+| Arrays | Item schema, minimum/maximum length, and unique items |
+| Definitions | Add, rename, remove, and edit `$defs`; choose a root definition as a `$ref` target |
+| Common values | `enum`, `const`, `default`, and `examples` through small JSON value fields |
+| Metadata | Root `$id`, title, and description |
+
+Root definition renames update local references, including escaped names, and
+preserve JSON instance data such as defaults and enum entries. References
+inside separate resources identified by `$id` retain their own scope.
+Deleting a definition that is still referenced reports a compilation error
+until the reference is repaired. Property renames and removal maintain the
+containing object's `required` list.
+
+Format suggestions are configurable through `formats:`. Custom format strings
+are also accepted. The generated `format` is an annotation; enable assertions
+when compiling an instance validator if your application requires them.
+`resources:` and `baseUri:` support offline external references.
+
+Existing keywords without dedicated visual controls are preserved. Imported
+`properties` or `items` without `type` still show the corresponding controls
+without inserting a type. Imported unions with multiple non-null types retain
+their type list until another type is explicitly selected. Tuple positions,
+combinators, conditionals, dynamic references, and custom keywords currently
+have no dedicated authoring controls; edit those through the example's JSON
+panel. Switching a type preserves other keywords, whose applicability follows
+JSON Schema. This is an authoring interface for common constructs, not a claim
+of complete visual coverage of the dialect.
+
+Controls inherit Material colors, typography, and input decoration. Spacing
+uses `SchemaUiTheme`. Extend `SchemaEditorMessages` and override its getters and
+methods to connect application localization; only English defaults are bundled.
+Changing messages preserves the current edits and pending input.
+
+~~~dart
+class AppSchemaMessages extends SchemaEditorMessages {
+  const AppSchemaMessages();
+
+  @override
+  String get addProperty => 'Create field';
+}
+~~~
+
+The [schema builder example](example/lib/schema_builder_screen.dart) provides
+the visual editor on the left and editable JSON on the right, with synchronization
+in both directions, formatting, copy, error feedback, and reset. Narrow screens
+stack the panels vertically. Open **Schema builder** from the example's app bar.
 
 ## Create or edit an instance
 
@@ -309,7 +397,8 @@ resources propagate engine exceptions rather than becoming instance errors.
 ## Example and checks
 
 The [example application](example/README.md) includes Web and Windows runners,
-submission, reset, optional properties, and a string override. From the
+submission, reset, optional properties, a string override, and a schema builder
+with synchronized visual and JSON editors. From the
 repository root:
 
 ```sh
@@ -325,4 +414,6 @@ development toolchain is installed. The entry point is
 From the repository root run `flutter pub get`; from this package run
 `flutter test --no-pub`. Widget tests exercise Form integration, overrides,
 exact numbers, references, themes, arrays, presence, and lifecycle behavior.
+Schema authoring tests also verify nested generation, constraints, definition
+renames, draft selection, preserved keywords, invalid edits, and submission.
 Run the example's widget tests separately from `example` with the same command.
