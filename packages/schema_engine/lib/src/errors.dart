@@ -1,3 +1,14 @@
+import 'validation_error_codes.dart';
+import 'validation_messages.dart';
+
+/// Formats a structured validation error in an application-selected language.
+///
+/// Use [ValidationError.code] and [ValidationError.parameters], rather than
+/// matching message text. The formatter receives a diagnostic without an active
+/// formatter, so [ValidationError.message] provides its base explanation as a
+/// fallback without invoking the formatter recursively.
+typedef ValidationErrorFormatter = String Function(ValidationError error);
+
 /// A malformed schema or an unsupported required vocabulary.
 final class SchemaException implements Exception {
   /// Creates an error at [schemaPath], a JSON Pointer within the schema.
@@ -31,19 +42,69 @@ final class ReferenceException implements Exception {
 /// A failed instance assertion with locations expressed as JSON Pointers.
 final class ValidationError {
   /// Creates a diagnostic for a failed [keyword].
+  ///
+  /// [code] defaults to [keyword]. Omitting [message] generates an explanation
+  /// lazily from [parameters]. An explicit message remains supported for
+  /// application-created diagnostics. Engine-produced parameter maps and their
+  /// nested values are immutable; callers constructing errors should supply
+  /// immutable parameters too. `messageFormatter` controls the displayed
+  /// language without altering the structured diagnostic.
   const ValidationError({
     required this.keyword,
-    required this.message,
+    this._message,
     required this.instancePath,
     required this.schemaPath,
     required this.schemaLocation,
-  });
+    String? code,
+    this.parameters = const {},
+    this._messageFormatter,
+  }) : code = code ?? keyword;
 
   /// The keyword that failed.
   final String keyword;
 
-  /// A human-readable English explanation.
-  final String message;
+  /// A stable message identifier, independent of the displayed language.
+  ///
+  /// Usually the assertion keyword. A false schema used by an applicator has
+  /// that applicator's code, and application keywords use `custom`.
+  /// Use [ValidationErrorCodes] for built-in values in catalogs and comparisons.
+  final String code;
+
+  /// The constraints and failure details needed to format this diagnostic.
+  ///
+  /// Values preserve exact JSON numbers. They do not embed or retain the
+  /// complete instance. See the diagnostic parameter reference in the README.
+  final Map<String, Object?> parameters;
+
+  final String? _message;
+  final ValidationErrorFormatter? _messageFormatter;
+
+  /// The human-readable explanation in the configured language.
+  ///
+  /// English is the default. Text is generated only when requested.
+  String get message => _messageFormatter == null
+      ? _message ?? const ValidationMessages.english().format(this)
+      : _messageFormatter(_withoutMessageFormatter());
+
+  /// Formats this error without validating the instance again.
+  ///
+  /// With no [formatter], returns [message]. A supplied formatter overrides the
+  /// compilation or validation call's selected language for this presentation.
+  /// Its diagnostic's [message] provides the base explanation as a fallback.
+  String formatMessage([ValidationErrorFormatter? formatter]) =>
+      formatter == null ? message : formatter(_withoutMessageFormatter());
+
+  ValidationError _withoutMessageFormatter() => _messageFormatter == null
+      ? this
+      : ValidationError(
+          keyword: keyword,
+          code: code,
+          parameters: parameters,
+          message: _message,
+          instancePath: instancePath,
+          schemaPath: schemaPath,
+          schemaLocation: schemaLocation,
+        );
 
   /// The JSON Pointer within the instance.
   final String instancePath;
@@ -57,6 +118,8 @@ final class ValidationError {
   /// Serializes this error without embedding the instance itself.
   Map<String, Object?> toJson() => {
     'keyword': keyword,
+    'code': code,
+    'parameters': parameters,
     'message': message,
     'instancePath': instancePath,
     'schemaPath': schemaPath,

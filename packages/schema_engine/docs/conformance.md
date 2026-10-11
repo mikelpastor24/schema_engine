@@ -65,10 +65,22 @@ loading. A decimal grid checks more than 8,000 multiples against an independent
 integer-arithmetic oracle. Numeric regressions cover exact large values,
 adjacent decimal bounds, uniqueness, serialization, and generated validators.
 JavaScript smoke checks exercise the portable core and lossless numeric model.
-There are 301 original tests, 65 core JavaScript smoke checks, and 102
+There are 361 original tests, 65 core JavaScript smoke checks, and 102
 declarative JavaScript checks. Declarative tests generate and validate each
 published draft, including property presence, nullable values, tuples, and
 legacy union spelling. Both construction APIs use the same compiled engine.
+
+Diagnostic tests cover every implemented assertion family, exact constraints,
+historical keyword spelling, property-name context, short-circuit counts, lazy
+formatting, formatter message fallbacks, open catalogs, asynchronous
+compilation, and generated validators.
+The official suite was also rerun on the VM after the diagnostic changes:
+9,361 cases in all three modes, with zero failures or missing-resource groups.
+The existing JavaScript suite record above describes its earlier verification;
+it is not a fresh JavaScript run of the diagnostic changes. See the
+[diagnostic reference](diagnostics.md) for codes and localization extension points.
+The [diagnostic benchmark](diagnostic_benchmarks.md) records the measured cost of
+the richer diagnostic paths and the limits of that comparison.
 
 ## Numeric and platform scope
 

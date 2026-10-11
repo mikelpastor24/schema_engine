@@ -83,12 +83,14 @@ final class _Properties extends _Rule {
     for (final key in required) {
       if (!instance.containsKey(key)) {
         valid = false;
-        if (report) {
+        if (report && context?.errors != null) {
           context?.fail(
-            entry,
-            'required',
+            entry.draft.isLegacy ? properties[key]!.entry : entry,
+            entry.draft.isLegacy && entry.draft != SchemaDraft.draft3
+                ? 'optional'
+                : 'required',
             path,
-            'Missing required property "$key".',
+            parameters: {'property': key},
           );
         }
         if (stop()) {
@@ -122,7 +124,7 @@ final class _Properties extends _Rule {
       final key = rawKey as String;
       final childPath = _childPath(context, path, key, report);
       if (names != null &&
-          !names!.run(key, context, path: childPath, report: report)) {
+          !_validPropertyName(key, context, childPath, report)) {
         valid = false;
         if (stop()) {
           return false;
@@ -148,12 +150,15 @@ final class _Properties extends _Rule {
       }
       if (!covered && additional != null) {
         marks?.properties.add(key);
-        if (!additional!.run(
-          instance[key],
-          context,
-          path: childPath,
-          report: report,
-        )) {
+        final allowed = additional!.alwaysFalse
+            ? _rejectProperty(additional!, key, context, childPath, report)
+            : additional!.run(
+                instance[key],
+                context,
+                path: childPath,
+                report: report,
+              );
+        if (!allowed) {
           valid = false;
           if (stop()) {
             return false;
@@ -162,6 +167,25 @@ final class _Properties extends _Rule {
       }
     }
     return valid;
+  }
+
+  bool _validPropertyName(
+    String key,
+    _Context? context,
+    String path,
+    bool report,
+  ) {
+    final previous = context?.propertyName;
+    if (report && context?.errors != null) {
+      context!.propertyName = key;
+    }
+    try {
+      return names!.run(key, context, path: path, report: report);
+    } finally {
+      if (context != null) {
+        context.propertyName = previous;
+      }
+    }
   }
 }
 
@@ -188,12 +212,15 @@ final class _Items extends _Rule {
         break;
       }
       marks?.items.add(i);
-      if (!node.run(
-        instance[i],
-        context,
-        path: _childPath(context, path, '$i', report),
-        report: report,
-      )) {
+      final allowed = node.alwaysFalse && i >= prefix.length
+          ? _rejectItem(node, i, context, path, report, limit: prefix.length)
+          : node.run(
+              instance[i],
+              context,
+              path: _childPath(context, path, '$i', report),
+              report: report,
+            );
+      if (!allowed) {
         valid = false;
         if (context?.errors == null || !report || context!.firstOnly) {
           return false;
@@ -243,12 +270,19 @@ final class _Contains extends _Rule {
     final valid =
         compareNumbers(count, minimum) >= 0 &&
         (maximum == null || compareNumbers(count, maximum!) <= 0);
-    if (!valid && report) {
+    if (!valid && report && context?.errors != null) {
       context?.fail(
         entry,
         'contains',
         path,
-        'The number of matching items is invalid.',
+        parameters: {
+          'minimum': minimum,
+          'maximum': maximum,
+          'matches': count,
+          'reason': maximum != null && compareNumbers(count, maximum!) > 0
+              ? 'tooMany'
+              : 'tooFew',
+        },
       );
     }
     return valid;
@@ -256,9 +290,17 @@ final class _Contains extends _Rule {
 }
 
 final class _Combination extends _Rule {
-  _Combination(this.entry, this.keyword, this.children);
+  _Combination(
+    this.entry,
+    this.keyword,
+    this.children, {
+    String? errorKeyword,
+    this.parameters = const {},
+  }) : errorKeyword = errorKeyword ?? keyword;
   final _Entry entry;
   final String keyword;
+  final String errorKeyword;
+  final Map<String, Object?> parameters;
   final List<_Node> children;
 
   @override
@@ -312,12 +354,17 @@ final class _Combination extends _Rule {
     if (valid && collected != null && keyword != 'not') {
       marks!.merge(collected);
     }
-    if (!valid && report) {
+    if (!valid && report && context?.errors != null) {
       context?.fail(
         entry,
-        keyword,
+        errorKeyword,
         path,
-        'The instance does not satisfy $keyword.',
+        instance: instance,
+        parameters: {
+          ...parameters,
+          'branchCount': children.length,
+          'matches': matches,
+        },
       );
     }
     return valid;
@@ -355,11 +402,18 @@ final class _Conditional extends _Rule {
 }
 
 final class _Dependencies extends _Rule {
-  _Dependencies(this.entry, this.required, this.schemas, this.keyword);
+  _Dependencies(
+    this.entry,
+    this.required,
+    this.schemas,
+    this.keyword, {
+    this.requiredEntries = const {},
+  });
   final _Entry entry;
   final Map<String, List<String>> required;
   final Map<String, _Node> schemas;
   final String keyword;
+  final Map<String, _Entry> requiredEntries;
 
   @override
   bool run(
@@ -380,12 +434,12 @@ final class _Dependencies extends _Rule {
       for (final name in dependency.value) {
         if (!instance.containsKey(name)) {
           valid = false;
-          if (report) {
+          if (report && context?.errors != null) {
             context?.fail(
-              entry,
+              requiredEntries[dependency.key] ?? entry,
               keyword,
               path,
-              'Property "${dependency.key}" requires "$name".',
+              parameters: {'property': dependency.key, 'missingProperty': name},
             );
           }
           if (context?.errors == null || !report || context!.firstOnly) {

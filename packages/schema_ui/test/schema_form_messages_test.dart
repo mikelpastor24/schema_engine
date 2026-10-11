@@ -28,6 +28,76 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  testWidgets(
+    'engine catalogs localize specific field errors without resetting edits',
+    (tester) async {
+      final key = GlobalKey<FormState>();
+      final document = schema.object({
+        'name': schema.string().min(3),
+        'quantity': schema.number().min(2),
+      }).toJsonSchema();
+      final catalog = schema.ValidationMessages.fromTemplates({
+        ValidationErrorCodes.required: (error) =>
+            'Required property: ${error.parameters['property']}',
+        ValidationErrorCodes.type: (error) =>
+            'Expected types: ${error.parameters['expectedTypes']}',
+        ValidationErrorCodes.minLength: (error) =>
+            'Minimum length: ${error.parameters['limit']}',
+      });
+      Widget editor(schema.ValidationErrorFormatter formatter) => _host(
+        Form(
+          key: key,
+          child: SchemaForm(
+            schema: document,
+            messages: SchemaFormMessages(validationError: formatter),
+          ),
+        ),
+      );
+      await tester.pumpWidget(editor(catalog.format));
+      expect(key.currentState!.validate(), isFalse);
+      await tester.pump();
+      expect(_error(tester, _field('name')), 'Required property: name');
+      await tester.enterText(_field('name'), 'No');
+      await tester.enterText(_field('quantity'), '-');
+      expect(key.currentState!.validate(), isFalse);
+      await tester.pump();
+      expect(_error(tester, _field('name')), 'Minimum length: 3');
+      expect(_error(tester, _field('quantity')), 'Expected types: [number]');
+      final controller = tester
+          .widget<TextField>(
+            find.descendant(
+              of: _field('quantity'),
+              matching: find.byType(TextField),
+            ),
+          )
+          .controller;
+      await tester.pumpWidget(
+        editor(const schema.ValidationMessages.english().format),
+      );
+      expect(key.currentState!.validate(), isFalse);
+      await tester.pump();
+      expect(controller!.text, '-');
+      expect(
+        _error(tester, _field('name')),
+        contains('at least 3 Unicode characters'),
+      );
+      expect(
+        _error(tester, _field('quantity')),
+        'Expected number; received string.',
+      );
+      await tester.enterText(_field('name'), 'Reader');
+      await tester.enterText(_field('quantity'), '1');
+      expect(key.currentState!.validate(), isFalse);
+      await tester.pump();
+      expect(
+        _error(tester, _field('quantity')),
+        'Number must be at least 2; received 1.',
+      );
+      await tester.enterText(_field('quantity'), '3');
+      expect(key.currentState!.validate(), isTrue);
+    },
+  );
+
   testWidgets('messages customize nested labels and actions', (tester) async {
     Object? changed;
     final messages = SchemaFormMessages(

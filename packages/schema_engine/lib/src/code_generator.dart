@@ -91,10 +91,14 @@ final class $className {
   bool isValid(Object? value) => ${root == null ? '_runtime.isValid(value)' : 'isSpecialized ? $root(value) : _runtime.isValid(value)'};
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(Object? value,
+      {engine.ValidationErrorFormatter? messageFormatter}) =>
+      _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(Object? value,
+      {engine.ValidationErrorFormatter? messageFormatter}) =>
+      _runtime.errors(value, messageFormatter: messageFormatter);
 
 ${_fields.join('\n')}
 ${_methods.join('\n\n')}

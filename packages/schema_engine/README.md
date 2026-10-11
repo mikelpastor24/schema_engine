@@ -46,6 +46,71 @@ change an already compiled validator.
 Use `decodeJson` for JSON text whose large integers or precise decimals must
 remain exact. The validators also accept `BigInt` and `JsonNumber` values.
 
+## Specific diagnostics and localization
+
+Every instance error exposes a stable `code`, immutable `parameters`, its
+assertion `keyword`, and JSON Pointer locations. For example, `type` explains
+the expected and received JSON types, while `minLength` includes the minimum
+and actual Unicode character counts. Numeric bounds preserve exact values;
+object, array, format, and combinator failures explain their own constraints.
+`message` is generated lazily. The boolean path does not construct diagnostic
+parameters or invoke message formatters.
+
+Only English is bundled. `ValidationMessages` is an open catalog API: implement
+it for your localization system, extend `EnglishValidationMessages` to override
+selected cases, or provide code-specific callbacks with an English fallback:
+
+```dart
+final messages = ValidationMessages.fromTemplates({
+  ValidationErrorCodes.minLength: (error) =>
+      'Minimum length: ${error.parameters['limit']}; '
+      'current length: ${error.parameters['length']}.',
+});
+final validator = JsonSchema.fromJson({
+  'type': 'string',
+  'minLength': 3,
+}).compile(options: SchemaOptions(messageFormatter: messages.format));
+
+final error = validator.validate('No')!;
+print(error.message);
+print(error.code); // minLength
+print(error.parameters); // {limit: 3, length: 2}
+```
+
+Callback results can come from translated templates, plural rules, or generated
+localization methods. The application owns locale selection, catalog lookup,
+and unsupported-language fallback. The engine has no Flutter, `intl`, I/O, or
+other runtime dependency. The catalog map is copied; changing the original map
+does not change a catalog. A custom fallback catalog can be passed to
+`ValidationMessages.fromTemplates`.
+
+Use `ValidationErrorCodes.minLength`, `ValidationErrorCodes.type`, and the other
+public string constants as catalog keys or in `switch (error.code)`.
+Reserved-word codes use `enumValue` (`enum`), `constant` (`const`), and
+`falseSchema` (`false`). `ValidationErrorCodes.byKeyword` is the immutable
+built-in registry; `forKeyword` maps assertion names to their message codes and
+preserves application extension names. The compiler and catalogs share these
+constants, and serialized values retain their existing string representation.
+
+Supply `messageFormatter` on `validate` or `errors` to select another catalog
+without recompiling. Format an existing error through
+`error.formatMessage(otherCatalog.format)` without validating again. Generated
+validators support the same compilation and per-call settings. Async
+compilation preserves the formatter. An application-specific formatter can
+fall back to `error.message`. Formatters receive the same structured diagnostic
+without an active formatter, so this fallback does not invoke them recursively.
+
+`toJson()` includes `code`, `parameters`, and the selected message alongside
+the existing diagnostic locations. Use `encodeJson` to serialize exact numbers.
+Expected schema values are frozen; parameters do not retain the whole instance.
+Changing message presentation never changes validity. Invalid schemas and
+reference-resolution exceptions remain separate compilation errors.
+
+The [diagnostic parameter reference](docs/diagnostics.md) lists every supported
+message code and parameter shape. The standalone
+[catalog example](example/validation_messages.dart) demonstrates both extension
+and template-based catalogs.
+
 ## Declare schemas with a concise API
 
 Use a Dart import namespace to compose immutable declarations:

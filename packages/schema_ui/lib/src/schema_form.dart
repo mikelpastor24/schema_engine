@@ -307,12 +307,14 @@ class _SchemaFormState extends State<SchemaForm> {
     }
     if (isRequired && identical(_at(_value, path), _absent)) {
       final parent = path.substring(0, path.lastIndexOf('/'));
-      if (_diagnostics.any(
-        (error) =>
-            error.instancePath == parent &&
-            (error.keyword == 'required' || error.keyword == 'optional'),
-      )) {
-        return _messages.requiredPropertyError;
+      final property = _segments(path).last;
+      for (final error in _diagnostics) {
+        if (error.instancePath == parent &&
+            (error.keyword == 'required' || error.keyword == 'optional') &&
+            error.parameters['property'] == property) {
+          return _messages.requiredPropertyError ??
+              _messages.validationError(error);
+        }
       }
     }
     for (final error in _diagnostics) {

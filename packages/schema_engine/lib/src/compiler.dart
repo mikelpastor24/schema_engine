@@ -62,7 +62,12 @@ final class _Compiler {
         compiled.prepareFast();
       }
     }
-    return CompiledSchema._(node, rootDraft, needsContext);
+    return CompiledSchema._(
+      node,
+      rootDraft,
+      needsContext,
+      options.messageFormatter,
+    );
   }
 
   _Entry index(
@@ -556,10 +561,21 @@ final class _Compiler {
         ),
       );
     }
-    void test(String keyword, _Predicate predicate, [String? message]) =>
-        node.tests.add(
-          _Test(keyword, message ?? 'The instance fails $keyword.', predicate),
-        );
+    void test(
+      String keyword,
+      _Predicate predicate, {
+      String? code,
+      Map<String, Object?>? parameters,
+    }) => node.tests.add(
+      _Test(
+        keyword,
+        predicate,
+        Map.unmodifiable(
+          parameters ?? _constraintParameters(keyword, value, draft),
+        ),
+        code: code ?? ValidationErrorCodes.forKeyword(keyword),
+      ),
+    );
     final type = value['type'];
     if (type != null) {
       final alternatives = type is List<Object?> ? type : [type];
@@ -570,18 +586,27 @@ final class _Compiler {
         for (final name in strings) {
           final branch = _Node(entry)
             ..tests.add(
-              _Test(
-                'type',
-                'Unexpected type.',
-                (instance) => _matchesType(instance, name, draft),
-              ),
+              _Test('type', (instance) => _matchesType(instance, name, draft), {
+                'expectedTypes': List<String>.unmodifiable([name]),
+              }, code: ValidationErrorCodes.type),
             );
           branches.add(branch);
         }
         for (final schema in schemas) {
           branches.add(child(entry, 'type', schema));
         }
-        node.rules.add(_Combination(entry, 'anyOf', branches));
+        node.rules.add(
+          _Combination(
+            entry,
+            'anyOf',
+            branches,
+            errorKeyword: 'type',
+            parameters: {
+              'expectedTypes': List<String>.unmodifiable(strings),
+              'schemaAlternatives': schemas.length,
+            },
+          ),
+        );
       } else {
         test(
           'type',
@@ -589,7 +614,6 @@ final class _Compiler {
               ? _typePredicate(strings.single, draft)
               : (instance) =>
                     strings.any((name) => _matchesType(instance, name, draft)),
-          'The instance has an unexpected type.',
         );
       }
     }
@@ -900,10 +924,22 @@ final class _Compiler {
       for (var i = 0; i < list.length; i++) {
         final item = list[i];
         if (item is String) {
-          test('disallow', (instance) => !_matchesType(instance, item, draft));
+          test(
+            'disallow',
+            (instance) => !_matchesType(instance, item, draft),
+            parameters: {
+              'disallowedTypes': List<String>.unmodifiable([item]),
+            },
+          );
         } else {
           node.rules.add(
-            _Combination(entry, 'not', [child(entry, 'disallow', item, '$i')]),
+            _Combination(
+              entry,
+              'not',
+              [child(entry, 'disallow', item, '$i')],
+              errorKeyword: 'disallow',
+              parameters: {'schemaIndex': i},
+            ),
           );
         }
       }
@@ -912,7 +948,12 @@ final class _Compiler {
     for (final keyword in options.keywords.entries) {
       if (value.containsKey(keyword.key)) {
         final argument = value[keyword.key];
-        test(keyword.key, (instance) => keyword.value(instance, argument));
+        test(
+          keyword.key,
+          (instance) => keyword.value(instance, argument),
+          code: ValidationErrorCodes.custom,
+          parameters: {'constraint': argument},
+        );
       }
     }
     if (draft.supportsVocabularies) {
@@ -960,6 +1001,7 @@ final class _Compiler {
     }
     final required = <String, List<String>>{};
     final schemas = <String, _Node>{};
+    final requiredEntries = <String, _Entry>{};
     final keyword = draft.supportsVocabularies
         ? 'dependentRequired'
         : 'dependencies';
@@ -992,6 +1034,7 @@ final class _Compiler {
               (property.value! as Map<String, Object?>)['requires'];
           if (requires is String) {
             required[property.key] = [requires];
+            requiredEntries[property.key] = entries[property.value]!;
           } else if (requires is Map<String, Object?>) {
             final propertyEntry = entries[property.value]!;
             schemas[property.key] = child(propertyEntry, 'requires', requires);
@@ -1000,7 +1043,15 @@ final class _Compiler {
       }
     }
     if (required.isNotEmpty || schemas.isNotEmpty) {
-      node.rules.add(_Dependencies(entry, required, schemas, keyword));
+      node.rules.add(
+        _Dependencies(
+          entry,
+          required,
+          schemas,
+          draft.index < SchemaDraft.draft3.index ? 'requires' : keyword,
+          requiredEntries: requiredEntries,
+        ),
+      );
     }
   }
 

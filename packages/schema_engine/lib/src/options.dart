@@ -1,4 +1,5 @@
 import 'draft.dart';
+import 'errors.dart';
 
 /// Checks a string against a configured JSON Schema format.
 typedef FormatValidator = bool Function(String value);
@@ -30,6 +31,7 @@ final class SchemaOptions {
     this.legacyDependencies = false,
     this.assertContent = false,
     this.resolver,
+    this.messageFormatter,
     Map<Uri, Object?> resources = const {},
     Map<String, FormatValidator> formats = const {},
     Map<String, KeywordValidator> keywords = const {},
@@ -69,6 +71,12 @@ final class SchemaOptions {
   ///
   /// Content keywords in 2019-09 and 2020-12 remain annotations as specified.
   final bool assertContent;
+
+  /// The default formatter for instance validation messages.
+  ///
+  /// Null selects English. A validation call can override this without
+  /// recompiling. Formatting is lazy and never runs on the boolean path.
+  final ValidationErrorFormatter? messageFormatter;
 
   /// The optional asynchronous resource loader.
   final SchemaResolver? resolver;

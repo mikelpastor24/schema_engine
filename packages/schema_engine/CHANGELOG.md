@@ -1,5 +1,17 @@
 ## 0.0.1
 
+* Use a single ValidationError.message getter with safe formatter fallbacks.
+
+* Centralize built-in message identifiers in ValidationErrorCodes with string
+  constants, a keyword registry, and shared diagnostic/catalog references.
+
+* Add specific lazy validation explanations with stable codes and immutable
+  constraint parameters for all implemented assertion families.
+* Add an open ValidationMessages catalog API, English defaults, template-based
+  overrides, and compilation/per-call/presentation formatters in portable Dart.
+* Preserve exact numeric limits, Unicode lengths, property context, and
+  short-circuit count semantics; expose formatters on generated validators.
+
 * Move into `packages/schema_engine` in the shared Dart/Flutter workspace;
   preserve the public API and dependency-free portable runtime.
 

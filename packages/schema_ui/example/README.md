@@ -58,6 +58,9 @@ translate form text. The biography override uses `field.label` so its optional
 marker follows the same configuration as the default editors. See
 [form localization](../README.md#localize-form-messages) for the available
 messages and integration with an application's localization system.
+Validation errors include expected types, limits, and format names. Pass a
+shared engine catalog as `SchemaFormMessages(validationError: catalog.format)`
+to customize those diagnostics alongside the form's labels and actions.
 
 ## Checks
 

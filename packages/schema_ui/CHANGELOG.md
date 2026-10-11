@@ -1,5 +1,10 @@
 ## 0.0.1
 
+* Re-export ValidationErrorCodes for constant-based form message catalogs.
+
+* Display the engine's specific, localizable validation diagnostics, including
+  property-specific required errors, and share application-owned engine catalogs.
+
 * Add SchemaFormMessages for localized labels, actions, parsing errors, schema
   diagnostics, and root error summaries with English defaults.
 * Expose SchemaField.label and SchemaField.messages to custom editors; preserve

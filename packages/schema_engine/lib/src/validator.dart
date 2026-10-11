@@ -8,8 +8,10 @@ import 'json.dart';
 import 'json_number.dart';
 import 'options.dart';
 import 'schema.dart';
+import 'validation_error_codes.dart';
 
 part 'compiler.dart';
+part 'diagnostics.dart';
 part 'meta_schema.dart';
 part 'rules.dart';
 part 'vocabularies.dart';
@@ -20,7 +22,12 @@ part 'vocabularies.dart';
 /// and [errors] returns all assertion errors. Validation performs no I/O and
 /// never modifies the instance.
 final class CompiledSchema {
-  CompiledSchema._(this._root, this.draft, this._hasReferences);
+  CompiledSchema._(
+    this._root,
+    this.draft,
+    this._hasReferences,
+    this._messageFormatter,
+  );
 
   /// Compiles [schema] with locally registered resources.
   ///
@@ -64,6 +71,7 @@ final class CompiledSchema {
             validateSchema: selected.validateSchema,
             legacyDependencies: selected.legacyDependencies,
             assertContent: selected.assertContent,
+            messageFormatter: selected.messageFormatter,
             resources: resources,
             formats: selected.formats,
             keywords: selected.keywords,
@@ -82,6 +90,7 @@ final class CompiledSchema {
 
   final _Node _root;
   final bool _hasReferences;
+  final ValidationErrorFormatter? _messageFormatter;
 
   /// The root schema's effective dialect.
   final SchemaDraft draft;
@@ -91,8 +100,17 @@ final class CompiledSchema {
       _root.run(instance, _hasReferences ? _Context() : null);
 
   /// Returns the first validation error, or null for a valid instance.
-  ValidationError? validate(Object? instance) {
-    final context = _Context(firstOnly: true, errors: []);
+  ///
+  /// [messageFormatter] overrides the compilation language for this call.
+  ValidationError? validate(
+    Object? instance, {
+    ValidationErrorFormatter? messageFormatter,
+  }) {
+    final context = _Context(
+      firstOnly: true,
+      errors: [],
+      messageFormatter: messageFormatter ?? _messageFormatter,
+    );
     _root.run(instance, context);
     return context.errors!.isEmpty ? null : context.errors!.first;
   }
@@ -101,31 +119,60 @@ final class CompiledSchema {
   ///
   /// Branch alternatives produce a combinator error rather than reporting
   /// failures from branches that the schema does not require to match.
-  List<ValidationError> errors(Object? instance) {
-    final context = _Context(errors: []);
+  ///
+  /// [messageFormatter] overrides the compilation language for this call.
+  List<ValidationError> errors(
+    Object? instance, {
+    ValidationErrorFormatter? messageFormatter,
+  }) {
+    final context = _Context(
+      errors: [],
+      messageFormatter: messageFormatter ?? _messageFormatter,
+    );
     _root.run(instance, context);
     return List.unmodifiable(context.errors!);
   }
 }
 
 final class _Context {
-  _Context({this.errors, this.firstOnly = false});
+  _Context({this.errors, this.firstOnly = false, this.messageFormatter});
   final List<ValidationError>? errors;
   final bool firstOnly;
+  final ValidationErrorFormatter? messageFormatter;
+  String? propertyName;
   final List<(_Node, Object?)> active = [];
   final List<_Resource> scope = [];
 
-  void fail(_Entry entry, String keyword, String path, String message) {
+  void fail(
+    _Entry entry,
+    String keyword,
+    String path, {
+    String? code,
+    Object? instance,
+    Map<String, Object?> parameters = const {},
+  }) {
     if (errors == null) {
       return;
     }
     final pointer = keyword == 'false'
         ? entry.path
         : '${entry.path}/${escapePointer(keyword)}';
+    final messageCode = code ?? ValidationErrorCodes.forKeyword(keyword);
+    final details = _instanceParameters(
+      messageCode,
+      instance,
+      parameters,
+      entry.draft,
+    );
+    if (propertyName != null) {
+      details['propertyName'] = propertyName;
+    }
     errors!.add(
       ValidationError(
         keyword: keyword,
-        message: message,
+        code: messageCode,
+        parameters: Map.unmodifiable(details),
+        messageFormatter: messageFormatter,
         instancePath: path,
         schemaPath: pointer,
         schemaLocation: entry.resource.uri.replace(fragment: pointer),
@@ -147,9 +194,15 @@ final class _Marks {
 typedef _Predicate = bool Function(Object? instance);
 
 final class _Test {
-  const _Test(this.keyword, this.message, this.predicate);
+  const _Test(
+    this.keyword,
+    this.predicate,
+    this.parameters, {
+    required this.code,
+  });
   final String keyword;
-  final String message;
+  final String code;
+  final Map<String, Object?> parameters;
   final _Predicate predicate;
 }
 
@@ -265,12 +318,12 @@ final class _Node {
     }
     try {
       if (alwaysFalse) {
-        if (report) {
+        if (report && context?.errors != null) {
           context?.fail(
             entry,
             'false',
             path,
-            'The schema rejects every value.',
+            code: ValidationErrorCodes.falseSchema,
           );
         }
         return false;
@@ -279,8 +332,15 @@ final class _Node {
       for (final test in tests) {
         if (!test.predicate(instance)) {
           valid = false;
-          if (report) {
-            context?.fail(entry, test.keyword, path, test.message);
+          if (report && context?.errors != null) {
+            context?.fail(
+              entry,
+              test.keyword,
+              path,
+              code: test.code,
+              instance: instance,
+              parameters: test.parameters,
+            );
           }
           if (context?.errors == null || !report || context!.firstOnly) {
             return false;
@@ -306,12 +366,22 @@ final class _Node {
         for (final rawKey in instance.keys) {
           final key = rawKey as String;
           if (!evaluated!.properties.contains(key)) {
-            if (!unevaluatedProperties!.run(
-              instance[key],
-              context,
-              path: _childPath(context, path, key, report),
-              report: report,
-            )) {
+            final allowed = unevaluatedProperties!.alwaysFalse
+                ? _rejectProperty(
+                    unevaluatedProperties!,
+                    key,
+                    context,
+                    _childPath(context, path, key, report),
+                    report,
+                    code: ValidationErrorCodes.unevaluatedProperties,
+                  )
+                : unevaluatedProperties!.run(
+                    instance[key],
+                    context,
+                    path: _childPath(context, path, key, report),
+                    report: report,
+                  );
+            if (!allowed) {
               valid = false;
               if (context?.errors == null || !report || context!.firstOnly) {
                 return false;
@@ -324,12 +394,22 @@ final class _Node {
       if (instance is List<Object?> && unevaluatedItems != null) {
         for (var i = 0; i < instance.length; i++) {
           if (!evaluated!.items.contains(i)) {
-            if (!unevaluatedItems!.run(
-              instance[i],
-              context,
-              path: _childPath(context, path, '$i', report),
-              report: report,
-            )) {
+            final allowed = unevaluatedItems!.alwaysFalse
+                ? _rejectItem(
+                    unevaluatedItems!,
+                    i,
+                    context,
+                    path,
+                    report,
+                    code: ValidationErrorCodes.unevaluatedItems,
+                  )
+                : unevaluatedItems!.run(
+                    instance[i],
+                    context,
+                    path: _childPath(context, path, '$i', report),
+                    report: report,
+                  );
+            if (!allowed) {
               valid = false;
               if (context?.errors == null || !report || context!.firstOnly) {
                 return false;

@@ -1,5 +1,13 @@
 ## Unreleased
 
+* Use ValidationError.message for all formatter fallbacks without recursion.
+
+* Expose shared ValidationErrorCodes constants and a keyword registry in the
+  engine and UI packages for message catalogs and diagnostic comparisons.
+
+* Add specific schema_engine diagnostics with structured parameters and open
+  message catalogs, English defaults, and shared schema_ui localization support.
+
 * Add configurable schema_ui form messages for localization, including optional
   labels, actions, validation diagnostics, and custom editor integration.
 

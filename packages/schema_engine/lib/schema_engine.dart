@@ -9,4 +9,6 @@ export 'src/json_number.dart' show JsonNumber;
 export 'src/options.dart';
 export 'src/schema.dart';
 export 'src/schema_definition.dart';
+export 'src/validation_error_codes.dart';
+export 'src/validation_messages.dart';
 export 'src/validator.dart' show CompiledSchema;

@@ -38,10 +38,16 @@ final class GeneratedDeclarative {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   engine.CompiledSchema? _exact2;
   bool _check0(Object? value) {
@@ -140,10 +146,16 @@ final class GeneratedBigNumber {
   bool isValid(Object? value) => _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 }
 
 /// Validates the embedded schema with generated boolean checks and diagnostics.
@@ -174,10 +186,16 @@ final class GeneratedInteger {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   engine.CompiledSchema? _exact0;
   bool _check0(Object? value) {
@@ -237,10 +255,16 @@ final class GeneratedObject {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   engine.CompiledSchema? _exact1;
   bool _check0(Object? value) {
@@ -339,10 +363,16 @@ final class GeneratedArray {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   engine.CompiledSchema? _exact1;
   bool _check0(Object? value) {
@@ -407,10 +437,16 @@ final class GeneratedConditional {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   engine.CompiledSchema? _exact3;
   bool _check0(Object? value) {
@@ -482,10 +518,16 @@ final class GeneratedAlternatives {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   engine.CompiledSchema? _exact2;
   bool _check0(Object? value) {
@@ -547,10 +589,16 @@ final class GeneratedPatterns {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   final _pattern0 = RegExp("^x\\\$", unicode: true);
   engine.CompiledSchema? _exact1;
@@ -612,10 +660,16 @@ final class GeneratedFallback {
   bool isValid(Object? value) => _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 }
 
 /// Validates the embedded schema with generated boolean checks and diagnostics.
@@ -642,10 +696,16 @@ final class GeneratedEmpty {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     return true;
@@ -676,10 +736,16 @@ final class GeneratedFalse {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) => false;
 }
@@ -717,10 +783,16 @@ final class GeneratedEmptyCollection {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!(((_check1(value) ? 1 : 0) + (_check2(value) ? 1 : 0)) == 1)) {
@@ -780,10 +852,16 @@ final class GeneratedUnicodeString {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (value is! String) {
@@ -826,10 +904,16 @@ final class GeneratedDraft0 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -884,10 +968,16 @@ final class GeneratedDraft1 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -942,10 +1032,16 @@ final class GeneratedDraft2 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -1000,10 +1096,16 @@ final class GeneratedDraft3 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -1059,10 +1161,16 @@ final class GeneratedDraft4 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -1118,10 +1226,16 @@ final class GeneratedDraft6 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -1177,10 +1291,16 @@ final class GeneratedDraft7 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -1236,10 +1356,16 @@ final class GeneratedDraft201909 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&
@@ -1295,10 +1421,16 @@ final class GeneratedDraft202012 {
       isSpecialized ? _check0(value) : _runtime.isValid(value);
 
   /// Returns the first assertion error, or null for a valid instance.
-  engine.ValidationError? validate(Object? value) => _runtime.validate(value);
+  engine.ValidationError? validate(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.validate(value, messageFormatter: messageFormatter);
 
   /// Returns all assertion errors for the instance.
-  List<engine.ValidationError> errors(Object? value) => _runtime.errors(value);
+  List<engine.ValidationError> errors(
+    Object? value, {
+    engine.ValidationErrorFormatter? messageFormatter,
+  }) => _runtime.errors(value, messageFormatter: messageFormatter);
 
   bool _check0(Object? value) {
     if (!((value is Map<Object?, Object?> &&

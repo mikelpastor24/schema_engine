@@ -23,7 +23,7 @@ final class SchemaFormMessages {
     this.valueLabel = 'Value',
     this.additionalPropertiesLabel = 'Additional properties (JSON)',
     this.addItemLabel = 'Add item',
-    this.requiredPropertyError = 'This property is required.',
+    this.requiredPropertyError,
     this.invalidJsonError = 'Enter valid JSON.',
     this.invalidAdditionalPropertiesError =
         'Enter a JSON object with additional keys only.',
@@ -47,8 +47,9 @@ final class SchemaFormMessages {
 
   /// The field error for an absent required object property.
   ///
-  /// The root's structured `required` diagnostic uses [validationError].
-  final String requiredPropertyError;
+  /// Null uses the engine's property-specific diagnostic via [validationError].
+  /// Supply text to override missing-property errors in generated fields.
+  final String? requiredPropertyError;
 
   /// The error for JSON text that cannot be decoded.
   final String invalidJsonError;

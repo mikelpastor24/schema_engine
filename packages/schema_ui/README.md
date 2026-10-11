@@ -221,26 +221,39 @@ receive the full label so translations control punctuation and word order.
 Array removal callbacks receive one-based item numbers. Schema titles,
 descriptions, property names, and enum values remain application-supplied text.
 
-Use `validationError` to translate schema diagnostics through their structured
-`keyword`, `instancePath`, `schemaPath`, and `schemaLocation`, without matching
-English messages. For example:
+Use `validationError` to share an engine `ValidationMessages` catalog. Errors
+carry a stable `code`, immutable `parameters`, and their original schema/instance
+locations, so translations can include limits and expected types without
+matching English text. Only English is bundled; the application supplies any
+other locale through templates or a custom catalog. For example:
 
 ```dart
-SchemaFormMessages(
-  validationError: (error) => switch (error.keyword) {
-    'minLength' => 'This text is too short.',
-    'format' => 'This value has an invalid format.',
-    _ => error.message,
-  },
+final errors = schema.ValidationMessages.fromTemplates({
+  schema.ValidationErrorCodes.minLength: (error) => 'Minimum length: ${error.parameters['limit']}.',
+});
+SchemaForm(
+  schema: document,
+  messages: SchemaFormMessages(validationError: errors.format),
 );
 ```
 
 This changes presentation only; the engine's validity results and
-`SchemaField.errors` remain intact. `numberInputError` formats the decoder's
+`SchemaField.errors` remain intact. Missing required fields use their specific
+engine diagnostic by default; `requiredPropertyError` can override that text.
+The same catalog can be used with pure Dart validators through
+`SchemaOptions.messageFormatter` or per-call `messageFormatter`. In Flutter,
+updating `SchemaFormMessages.validationError` selects another catalog while
+preserving edits; changing engine compilation options restarts the editor.
+See the engine's [diagnostic reference](../schema_engine/docs/diagnostics.md)
+for all codes and parameters. `numberInputError` formats the decoder's
 `FormatException` only when no schema assertion rejects the pending numeric
 input. `errorSummary` formats the root's JSON Pointer and already formatted
 error. Messages supplied by custom editors through `setInputError` stay as
 provided; custom editors are responsible for localizing those strings.
+
+`ValidationErrorCodes` is also exported by `schema_ui`, so form-only imports can
+use constants such as `ValidationErrorCodes.minLength` directly in their catalog
+keys and error comparisons. The engine owns the shared values.
 
 Rebuilding with different messages preserves the instance, typed text, focus,
 and pending input errors, without recompiling the schema. Updated error text

@@ -4,6 +4,28 @@ import 'package:test/test.dart';
 import 'generated_validators.dart';
 
 void main() {
+  test('generated diagnostics support compilation and per-call locales', () {
+    final catalog = ValidationMessages.fromTemplates({
+      ValidationErrorCodes.minimum: (error) =>
+          'Minimum value: ${error.parameters['limit']}',
+    });
+    final generated = GeneratedInteger();
+    expect(generated.isSpecialized, isTrue);
+    expect(generated.validate(-1)!.parameters['limit'], 0);
+    final localized = generated.validate(-1, messageFormatter: catalog.format)!;
+    expect(localized.message, 'Minimum value: 0');
+    expect(
+      generated.errors(-1, messageFormatter: catalog.format).single.message,
+      localized.message,
+    );
+    final configured = GeneratedInteger(
+      options: SchemaOptions(messageFormatter: catalog.format),
+    );
+    expect(configured.validate(-1)!.message, localized.message);
+    expect(generated.isValid(-1), isFalse);
+    expect(generated.isSpecialized, isTrue);
+  });
+
   test('generated scalars match the runtime backend at every boundary', () {
     final generated = GeneratedInteger();
     final runtime = JsonSchema.fromJson({
