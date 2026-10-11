@@ -1,5 +1,8 @@
 ## 1.0.0
 
+* Add pub.dev metadata, installation instructions, a discoverable example, and
+  package-local analysis options; use the standard `doc` directory.
+
 * Use a single ValidationError.message getter with safe formatter fallbacks.
 
 * Centralize built-in message identifiers in ValidationErrorCodes with string

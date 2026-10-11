@@ -45,7 +45,7 @@ def main():
         "javascriptResults": web_results,
         "policies": {key: results.get(key) for key in
                      ["formatAssertions", "legacyDependencies", "contentAssertions"]}}
-    target = Path(__file__).resolve().parent.parent / "docs/conformance_snapshot.json"
+    target = Path(__file__).resolve().parent.parent / "doc/conformance_snapshot.json"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Recorded {len(records)} external files in {target.name}")

@@ -1,5 +1,8 @@
 ## 1.0.0
 
+* Add pub.dev metadata, installation instructions, package-local analysis
+  options, and documentation links that work outside the repository.
+
 * Place More options before nested schemas and group its controls into localized
   Validation and Annotations tabs, retaining tab selection and pending edits.
 * Continue validating hidden option fields and remove their keyboard focus when

@@ -1,6 +1,13 @@
 name: schema_engine
 description: A portable JSON Schema compiler, validator, parser, and schema builder for Dart.
 version: 1.0.0
+repository: https://github.com/mikelpastor24/schema_engine/tree/main/packages/schema_engine
+issue_tracker: https://github.com/mikelpastor24/schema_engine/issues
+topics:
+  - json
+  - json-schema
+  - validation
+  - code-generation
 
 resolution: workspace
 

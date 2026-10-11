@@ -32,6 +32,18 @@ Use English identifiers and descriptive text in examples and tests. Keep
 documentation clear, concise, and consistent with the public API. User-facing
 conversation may remain in Spanish unless the user requests another language.
 
+## README scope
+
+Keep the root README as a brief project overview with links to the packages and
+documentation. Package READMEs explain their purpose, features, requirements,
+limitations, installation, and a small code example. Keep detailed API behavior,
+architecture, development commands, tests, benchmarks, and publishing procedures
+in documentation guides instead of expanding the READMEs.
+
+Use the root `docs/` directory for project development and publishing guides.
+Keep package-specific guides in each package's `doc/` directory, following Pub
+layout conventions and keeping those guides inside the published archive.
+
 ## Effective Dart
 
 Follow [Effective Dart](https://dart.dev/effective-dart) for all Dart code,
@@ -88,8 +100,10 @@ guideline, including benchmark evidence when motivated by performance.
   boolean validation separately.
 - `tool/` contains example/code generators, restricted-environment verification
   adapters, and external conformance-suite download/snapshot tools.
-- `docs/conformance.md` and its snapshot manifest distinguish verified cases
+- `doc/conformance.md` and its snapshot manifest distinguish verified cases
   from missing-resource groups. Do not turn partial coverage into a full claim.
+- The repository's `docs/` directory contains development and publishing
+  guides. Each package's `doc/` directory contains detailed usage guides.
 - The original source uses MIT with the project copyright in `LICENSE`.
 
 ## Specification and compatibility
@@ -213,7 +227,8 @@ dart run benchmark/generated.dart
 From the repository root, `flutter analyze --no-pub` checks the workspace and
 `dart run tool/check.dart` runs all repository checks. Run UI tests with
 `flutter test --no-pub` from `packages/schema_ui`. Shared analysis options live
-at the repository root and apply to both packages.
+at the repository root; package-local copies also allow analysis of published
+archives. Keep their rules aligned with the root configuration.
 
 Run the UI example from `packages/schema_ui/example` with
 `flutter run -d chrome` or `flutter run -d windows`. Its widget tests use
@@ -227,7 +242,7 @@ profile, using `python tool/generate_unicode.py`.
 Use `dart run tool/run_suite.dart <external-suite-directory>` for official
 fixtures and `python tool/snapshot_suite.py <external-suite-directory>` to record
 hashes and outcomes. Keep third-party resources and their licenses outside this
-repository. See `docs/conformance.md` for adapters when a restricted environment
+repository. See `doc/conformance.md` for adapters when a restricted environment
 blocks standard analyzer/test subprocesses.
 `tool/analyze.dart` checks semantic diagnostics only. Use the official SDK
 server adapter, `python tool/analyze_sdk.py --sdk <dart-sdk>`, to include the

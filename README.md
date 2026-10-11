@@ -1,96 +1,21 @@
 # Schema packages
 
-A Dart/Flutter monorepository for working with JSON Schema documents and their
-instances. Original implementation, licensed under MIT.
+Dart and Flutter packages for creating JSON Schemas, validating JSON data, and
+building visual editors and forms from the same schema.
 
-| Package | Purpose | Runtime requirements |
+| Package | What it does | Requirements |
 | --- | --- | --- |
-| [schema_engine](packages/schema_engine) | Parse, build, serialize, compile, and validate JSON Schema | Dart; no runtime dependencies |
-| [schema_ui](packages/schema_ui) | Create JSON Schemas visually and generate customizable JSON instance forms | Flutter and schema_engine |
+| [schema_engine](packages/schema_engine) | Parse, build, serialize, and validate JSON Schemas and their instances | Dart 3.13 or later |
+| [schema_ui](packages/schema_ui) | Create schemas visually and edit JSON instances with themed Flutter forms | Flutter 3.47 and Dart 3.13 or later |
 
-The engine's public import remains `package:schema_engine/schema_engine.dart`.
-Flutter is isolated in `schema_ui`; Dart applications can depend on the engine
-without depending on Flutter.
+Use the engine in Dart or Flutter applications. Add the UI package when you need
+visual schema authoring or instance forms. Each package README includes its
+features, limitations, installation instructions, and a short example.
 
-## Development
+The [example application](packages/schema_ui/example) demonstrates instance
+editing and a schema builder with synchronized visual and JSON views.
 
-The repository uses a [Pub workspace](https://dart.dev/tools/pub/workspaces) with
-one dependency resolution. Developing the complete workspace requires Flutter
-3.47 or later and Dart 3.13 or later. Package versions remain independent.
+See the [documentation](docs/README.md) for detailed usage, development,
+compatibility, measurements, and publishing.
 
-From the repository root:
-
-```sh
-flutter pub get
-dart format packages tool
-flutter analyze --no-pub
-dart run tool/check.dart
-```
-
-`tool/check.dart` resolves dependencies, checks formatting, analyzes both
-packages, runs engine and widget tests, and runs the engine's all-drafts example.
-It also runs the example application's widget tests and exits as soon as a
-check fails.
-
-To run individual tests:
-
-```sh
-cd packages/schema_engine
-dart test
-dart run example/all_drafts.dart
-```
-
-```sh
-cd packages/schema_ui
-flutter test --no-pub
-```
-
-Run engine generators, benchmarks, and conformance adapters from
-`packages/schema_engine`. Their relative paths remain package-local. Existing
-conformance evidence and measurements are preserved in its
-[conformance report](packages/schema_engine/docs/conformance.md) and
-[performance report](packages/schema_engine/docs/performance.md).
-
-## Flutter forms
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:schema_engine/schema_engine.dart' as schema;
-import 'package:schema_ui/schema_ui.dart';
-
-final document = schema.object({
-  'name': schema.string().min(1),
-  'age': schema.integer().nonnegative().optional(),
-}).toJsonSchema();
-final formKey = GlobalKey<FormState>();
-
-final editor = Form(
-  key: formKey,
-  child: SchemaForm(
-    schema: document,
-    initialValue: {'name': 'Example'},
-    onSaved: (instance) => print(instance),
-  ),
-);
-
-void save() {
-  if (formKey.currentState!.validate()) {
-    formKey.currentState!.save();
-  }
-}
-```
-
-See the [schema_ui API and rendering matrix](packages/schema_ui/README.md) for
-widget overrides, theming, instance presence, and rendering limitations. The
-[example app](packages/schema_ui/example) demonstrates default fields and a
-custom multiline string editor.
-
-To open it in Chrome after resolving workspace dependencies:
-
-```sh
-cd packages/schema_ui/example
-flutter run -d chrome
-```
-
-The application also includes a Windows runner. See its
-[run instructions](packages/schema_ui/example/README.md) for other devices.
+Original implementation, licensed under [MIT](LICENSE).
