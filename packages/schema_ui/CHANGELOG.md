@@ -1,4 +1,4 @@
-## 0.0.1
+## 1.0.0
 
 * Place More options before nested schemas and group its controls into localized
   Validation and Annotations tabs, retaining tab selection and pending edits.

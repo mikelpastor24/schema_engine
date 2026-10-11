@@ -2,7 +2,7 @@ name: schema_ui
 description: >-
   Visual JSON Schema authoring and themed Flutter instance forms backed by
   schema_engine.
-version: 0.0.1
+version: 1.0.0
 
 resolution: workspace
 
