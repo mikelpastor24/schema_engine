@@ -1,5 +1,15 @@
 ## 0.0.1
 
+* Place More options before nested schemas and group its controls into localized
+  Validation and Annotations tabs, retaining tab selection and pending edits.
+* Continue validating hidden option fields and remove their keyboard focus when
+  changing tabs.
+
+* Retain expanded schema editor sections and unchanged controls during external
+  JSON updates, preserving visual scroll position in the example.
+* Simplify property and definition cards with a single name, grouped type and
+  compact options, visible common constraints, and a More options section.
+
 * Add SchemaEditor for creating Draft 2020-12 schemas through themed form
   controls, including nested properties, array items, constraints, and $defs.
 * Preserve unedited schema keywords, maintain required property names, and

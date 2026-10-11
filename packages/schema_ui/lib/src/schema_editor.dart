@@ -5,6 +5,7 @@ import 'schema_editor_messages.dart';
 import 'schema_ui_theme.dart';
 
 part 'schema_editor_model.dart';
+part 'schema_editor_options.dart';
 
 /// Creates or edits a Draft 2020-12 JSON Schema through Material form controls.
 ///
@@ -21,8 +22,9 @@ part 'schema_editor_model.dart';
 final class SchemaEditor extends StatefulWidget {
   /// Creates a visual schema editor, initially an empty object schema.
   ///
-  /// A different [schema] replaces the current document. Feeding the exact
-  /// [onChanged] result back into [schema] preserves text and focus. Other drafts
+  /// A different [schema] replaces the current document while keeping expanded
+  /// sections at unchanged schema locations. Feeding the exact [onChanged]
+  /// result back into [schema] also preserves pending text and focus. Other drafts
   /// are rejected rather than implicitly migrated. Invalid initial documents
   /// propagate the engine's schema or reference exception.
   const SchemaEditor({
@@ -102,7 +104,7 @@ final class SchemaEditor extends StatefulWidget {
 }
 
 class _SchemaEditorState extends State<SchemaEditor> {
-  var _rootKey = GlobalKey<FormFieldState<JsonSchema>>();
+  final _rootKey = GlobalKey<FormFieldState<JsonSchema>>();
   late _EditorNode _root;
   late JsonSchema _initial;
   JsonSchema? _candidate;
@@ -119,7 +121,7 @@ class _SchemaEditorState extends State<SchemaEditor> {
     _load();
   }
 
-  void _load() {
+  void _load({bool preserveState = false}) {
     _initial = widget.schema ?? JsonSchema.build(type: SchemaType.object);
     if (_initial.draft != SchemaDraft.draft202012) {
       throw ArgumentError.value(
@@ -143,7 +145,12 @@ class _SchemaEditorState extends State<SchemaEditor> {
       options: SchemaOptions(resources: widget.resources),
       baseUri: widget.baseUri,
     );
-    _root = _EditorNode(_initial.value);
+    final replacement = _EditorNode(_initial.value);
+    if (preserveState) {
+      _root.replaceFrom(replacement);
+    } else {
+      _root = replacement;
+    }
     _calculate();
   }
 
@@ -154,8 +161,7 @@ class _SchemaEditorState extends State<SchemaEditor> {
             !identical(widget.schema, _candidate)) ||
         widget.resources != oldWidget.resources ||
         widget.baseUri != oldWidget.baseUri) {
-      _load();
-      _rootKey = GlobalKey<FormFieldState<JsonSchema>>();
+      _load(preserveState: true);
     }
   }
 
@@ -286,55 +292,132 @@ class _SchemaEditorState extends State<SchemaEditor> {
     ),
   };
 
+  Widget _typeSelector(_EditorNode node) {
+    final kind = node.kind;
+    return DropdownButtonFormField<String>(
+      key: ValueKey((node, 'type', kind)),
+      initialValue: kind,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: _messages.type),
+      items: [
+        for (final value in [
+          'object',
+          'string',
+          'integer',
+          'number',
+          'boolean',
+          'array',
+          'null',
+          'any',
+          'reference',
+          'never',
+          if (kind == 'multiple') 'multiple',
+        ])
+          DropdownMenuItem(value: value, child: Text(_kindLabel(value))),
+      ],
+      onChanged: widget.enabled
+          ? (value) => _change(() {
+              node.chooseKind(
+                value!,
+                _root.definitions.isEmpty
+                    ? null
+                    : _definitionReference(_root.definitions.first.name),
+              );
+            })
+          : null,
+    );
+  }
+
+  Widget _nodeHeader(
+    _EditorNode node,
+    String? title,
+    Widget? nameField,
+    Widget? removeButton,
+  ) => LayoutBuilder(
+    builder: (context, constraints) {
+      final type = _typeSelector(node);
+      final name =
+          nameField ??
+          Text(title!, style: Theme.of(context).textTheme.titleMedium);
+      if (constraints.maxWidth >= 480) {
+        return Row(
+          children: [
+            Expanded(flex: 2, child: name),
+            SizedBox(width: _spacing),
+            Expanded(child: type),
+            ?removeButton,
+          ],
+        );
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: name),
+              ?removeButton,
+            ],
+          ),
+          SizedBox(height: _spacing),
+          type,
+        ],
+      );
+    },
+  );
+
+  Widget _option(String label, bool value, ValueChanged<bool> onChanged) =>
+      FilterChip(
+        label: Text(label),
+        selected: value,
+        onSelected: widget.enabled ? onChanged : null,
+      );
+
   Widget _nodeEditor(
     _EditorNode node,
     String path,
-    String title, {
+    String? title, {
     bool root = false,
+    Widget? nameField,
+    Widget? removeButton,
+    _NamedEditorNode? property,
   }) {
     final kind = node.kind;
+    final primaryKeywords = switch (kind) {
+      'string' => ['minLength', 'maxLength', 'format'],
+      'integer' || 'number' => ['minimum', 'maximum'],
+      _ => <String>[],
+    };
+    final nullable =
+        SchemaType.values.any((type) => type.jsonName == kind) &&
+        kind != 'null';
     final fields = <Widget>[
-      DropdownButtonFormField<String>(
-        key: ValueKey((node, 'type', kind)),
-        initialValue: kind,
-        isExpanded: true,
-        decoration: InputDecoration(labelText: _messages.type),
-        items: [
-          for (final value in [
-            'object',
-            'string',
-            'integer',
-            'number',
-            'boolean',
-            'array',
-            'null',
-            'any',
-            'reference',
-            'never',
-            if (kind == 'multiple') 'multiple',
-          ])
-            DropdownMenuItem(value: value, child: Text(_kindLabel(value))),
-        ],
-        onChanged: widget.enabled
-            ? (value) => _change(() {
-                node.chooseKind(
-                  value!,
-                  _root.definitions.isEmpty
-                      ? null
-                      : _definitionReference(_root.definitions.first.name),
-                );
-              })
-            : null,
-      ),
-      if (SchemaType.values.any((type) => type.jsonName == kind) &&
-          kind != 'null')
-        SwitchListTile(
-          title: Text(_messages.nullable),
-          value: node.nullable,
-          onChanged: widget.enabled
-              ? (value) => _change(() => node.setNullable(value))
-              : null,
+      _nodeHeader(node, title, nameField, removeButton),
+      if (property != null || nullable || kind == 'array')
+        Wrap(
+          spacing: _spacing / 2,
+          runSpacing: _spacing / 2,
+          children: [
+            if (property != null)
+              _option(
+                _messages.required,
+                property.isRequired,
+                (value) => _change(() => property.isRequired = value),
+              ),
+            if (nullable)
+              _option(
+                _messages.nullable,
+                node.nullable,
+                (value) => _change(() => node.setNullable(value)),
+              ),
+            if (kind == 'array')
+              _option(
+                _messages.uniqueItems,
+                node.keywords['uniqueItems'] == true,
+                (value) => _change(() => node.keywords['uniqueItems'] = value),
+              ),
+          ],
         ),
+      if (primaryKeywords.isNotEmpty) _keywordGrid(node, primaryKeywords),
       if (kind == 'reference') ...[
         if (_root.definitions.isNotEmpty)
           DropdownButtonFormField<String>(
@@ -383,49 +466,41 @@ class _SchemaEditorState extends State<SchemaEditor> {
         _keyword(node, r'$ref'),
       ],
       if (node.booleanValue == null)
-        ExpansionTile(
+        _SchemaEditorOptions(
           key: ValueKey((node, 'settings')),
-          title: Text(_messages.settings),
-          maintainState: true,
-          children: [
-            _keywordGrid(node, [
-              if (root) r'$id',
-              'title',
-              'description',
-              if (kind == 'string') ...[
-                'minLength',
-                'maxLength',
-                'pattern',
-                'format',
+          messages: _messages,
+          spacing: _spacing,
+          validation: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _keywordGrid(node, [
+                if (kind == 'string') 'pattern',
+                if (kind == 'integer' || kind == 'number') ...[
+                  'exclusiveMinimum',
+                  'exclusiveMaximum',
+                  'multipleOf',
+                ],
+                if (kind == 'object') ...['minProperties', 'maxProperties'],
+                if (kind == 'array') ...['minItems', 'maxItems'],
+                'enum',
+                'const',
+              ]),
+              if (kind == 'object') ...[
+                SizedBox(height: _spacing),
+                _additionalProperties(node, path),
               ],
-              if (kind == 'integer' || kind == 'number') ...[
-                'minimum',
-                'maximum',
-                'exclusiveMinimum',
-                'exclusiveMaximum',
-                'multipleOf',
-              ],
-              if (kind == 'object') ...['minProperties', 'maxProperties'],
-              if (kind == 'array') ...['minItems', 'maxItems'],
-              'enum',
-              'const',
-              'default',
-              'examples',
-            ]),
-          ],
+            ],
+          ),
+          annotations: _keywordGrid(node, [
+            if (root) r'$id',
+            'title',
+            'description',
+            'default',
+            'examples',
+          ]),
         ),
-      if (kind == 'object') ...[
-        _namedSection(node, path, definitions: false),
-        _additionalProperties(node, path),
-      ],
+      if (kind == 'object') _namedSection(node, path, definitions: false),
       if (kind == 'array') ...[
-        SwitchListTile(
-          title: Text(_messages.uniqueItems),
-          value: node.keywords['uniqueItems'] == true,
-          onChanged: widget.enabled
-              ? (value) => _change(() => node.keywords['uniqueItems'] = value)
-              : null,
-        ),
         if (node.children['items'] case final items?)
           _nodeEditor(items, '$path/items', _messages.items)
         else
@@ -444,28 +519,24 @@ class _SchemaEditorState extends State<SchemaEditor> {
       if (node.booleanValue == null && (root || node.definitions.isNotEmpty))
         _namedSection(node, path, definitions: true),
     ];
-    return Card(
-      key: ObjectKey(node),
-      child: Padding(
-        padding: EdgeInsets.all(_spacing),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            SizedBox(height: _spacing),
-            for (var index = 0; index < fields.length; index++) ...[
-              if (index > 0) SizedBox(height: _spacing),
-              fields[index],
-            ],
+    final content = Padding(
+      padding: EdgeInsets.all(_spacing),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < fields.length; index++) ...[
+            if (index > 0) SizedBox(height: _spacing),
+            fields[index],
           ],
-        ),
+        ],
       ),
     );
+    return root ? content : Card.outlined(key: ObjectKey(node), child: content);
   }
 
   Widget _keywordGrid(_EditorNode node, List<String> keywords) => LayoutBuilder(
     builder: (context, constraints) {
-      final width = constraints.maxWidth >= 600
+      final width = constraints.maxWidth >= 480
           ? (constraints.maxWidth - _spacing) / 2
           : constraints.maxWidth;
       return Wrap(
@@ -542,110 +613,90 @@ class _SchemaEditorState extends State<SchemaEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          definitions ? _messages.definitions : _messages.properties,
-          style: Theme.of(context).textTheme.titleSmall,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                definitions ? _messages.definitions : _messages.properties,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            _addEntry(entries, definitions: definitions),
+          ],
         ),
         for (final entry in entries)
-          Column(
+          Padding(
             key: ObjectKey(entry),
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: _spacing),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      initialValue: entry.name,
-                      enabled: widget.enabled,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      autovalidateMode: widget.autovalidateMode,
-                      decoration: InputDecoration(
-                        labelText: definitions
-                            ? _messages.definitionName
-                            : _messages.propertyName,
-                      ),
-                      validator: (_) =>
-                          entries
-                                  .where((other) => other.name == entry.name)
-                                  .length >
-                              1
-                          ? _messages.duplicateName
-                          : null,
-                      onChanged: (value) => _change(() {
-                        entry.name = value;
-                        if (definitions &&
-                            identical(parent, _root) &&
-                            entries
-                                    .where((other) => other.name == value)
-                                    .length ==
-                                1) {
-                          _renameDefinition(entry.referenceName, value);
-                          entry.referenceName = value;
-                        }
-                      }),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: _messages.remove(entry.name),
-                    onPressed: widget.enabled
-                        ? () => _change(() {
-                            entries.remove(entry);
-                          })
-                        : null,
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-                ],
-              ),
-              if (!definitions)
-                SwitchListTile(
-                  title: Text(_messages.required),
-                  value: entry.isRequired,
-                  onChanged: widget.enabled
-                      ? (value) => _change(() {
-                          entry.isRequired = value;
-                        })
-                      : null,
+            padding: EdgeInsets.only(top: _spacing / 2),
+            child: _nodeEditor(
+              entry.node,
+              '$path/$keyword/${_editorEscape(entry.name)}',
+              null,
+              property: definitions ? null : entry,
+              nameField: TextFormField(
+                initialValue: entry.name,
+                enabled: widget.enabled,
+                autocorrect: false,
+                enableSuggestions: false,
+                autovalidateMode: widget.autovalidateMode,
+                decoration: InputDecoration(
+                  labelText: definitions
+                      ? _messages.definitionName
+                      : _messages.propertyName,
                 ),
-              _nodeEditor(
-                entry.node,
-                '$path/$keyword/${_editorEscape(entry.name)}',
-                entry.name,
+                validator: (_) =>
+                    entries.where((other) => other.name == entry.name).length >
+                        1
+                    ? _messages.duplicateName
+                    : null,
+                onChanged: (value) => _change(() {
+                  entry.name = value;
+                  if (definitions &&
+                      identical(parent, _root) &&
+                      entries.where((other) => other.name == value).length ==
+                          1) {
+                    _renameDefinition(entry.referenceName, value);
+                    entry.referenceName = value;
+                  }
+                }),
               ),
-            ],
-          ),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
-            onPressed: widget.enabled
-                ? () => _change(() {
-                    var index = 1;
-                    final prefix = definitions ? 'definition' : 'property';
-                    while (entries.any(
-                      (entry) => entry.name == '$prefix$index',
-                    )) {
-                      index++;
-                    }
-                    entries.add(
-                      _NamedEditorNode(
-                        '$prefix$index',
-                        _EditorNode({
-                          'type': definitions ? 'object' : 'string',
-                        }),
-                      ),
-                    );
-                  })
-                : null,
-            icon: const Icon(Icons.add),
-            label: Text(
-              definitions ? _messages.addDefinition : _messages.addProperty,
+              removeButton: IconButton(
+                tooltip: _messages.remove(entry.name),
+                onPressed: widget.enabled
+                    ? () => _change(() {
+                        entries.remove(entry);
+                      })
+                    : null,
+                icon: const Icon(Icons.delete_outline),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
+
+  Widget _addEntry(
+    List<_NamedEditorNode> entries, {
+    required bool definitions,
+  }) => TextButton.icon(
+    onPressed: widget.enabled
+        ? () => _change(() {
+            var index = 1;
+            final prefix = definitions ? 'definition' : 'property';
+            while (entries.any((entry) => entry.name == '$prefix$index')) {
+              index++;
+            }
+            entries.add(
+              _NamedEditorNode(
+                '$prefix$index',
+                _EditorNode({'type': definitions ? 'object' : 'string'}),
+              ),
+            );
+          })
+        : null,
+    icon: const Icon(Icons.add),
+    label: Text(definitions ? _messages.addDefinition : _messages.addProperty),
+  );
 
   Widget _additionalProperties(_EditorNode node, String path) {
     final child = node.children['additionalProperties'];

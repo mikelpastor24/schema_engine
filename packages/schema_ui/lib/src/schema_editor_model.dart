@@ -17,6 +17,17 @@ const _numberKeywords = {
   'multipleOf',
 };
 const _jsonKeywords = {'enum', 'const', 'default', 'examples'};
+const _editorInputKeywords = {
+  r'$id',
+  r'$ref',
+  'title',
+  'description',
+  'pattern',
+  'format',
+  ..._countKeywords,
+  ..._numberKeywords,
+  ..._jsonKeywords,
+};
 
 enum _InputProblem { number, count, multiple, json, array, name }
 
@@ -138,6 +149,55 @@ class _EditorNode {
   final List<_NamedEditorNode> definitions = [];
   final List<String> extraRequired = [];
   final Map<String, _EditorNode> children = {};
+
+  void replaceFrom(_EditorNode source) {
+    // Keep node identities at unchanged schema locations so widget state survives.
+    for (final keyword in _editorInputKeywords) {
+      if (inputText(keyword) != source.inputText(keyword)) {
+        revisions.update(keyword, (value) => value + 1, ifAbsent: () => 1);
+      }
+    }
+    booleanValue = source.booleanValue;
+    selectedKind = null;
+    keywords
+      ..clear()
+      ..addAll(source.keywords);
+    edits.clear();
+    extraRequired
+      ..clear()
+      ..addAll(source.extraRequired);
+
+    void replaceEntries(
+      List<_NamedEditorNode> target,
+      List<_NamedEditorNode> incoming,
+    ) {
+      final previous = {for (final entry in target) entry.name: entry};
+      target.clear();
+      for (final entry in incoming) {
+        final retained = previous[entry.name];
+        if (retained == null) {
+          target.add(entry);
+        } else {
+          retained.referenceName = entry.referenceName;
+          retained.isRequired = entry.isRequired;
+          retained.node.replaceFrom(entry.node);
+          target.add(retained);
+        }
+      }
+    }
+
+    replaceEntries(properties, source.properties);
+    replaceEntries(definitions, source.definitions);
+    children.removeWhere((keyword, _) => !source.children.containsKey(keyword));
+    for (final entry in source.children.entries) {
+      final retained = children[entry.key];
+      if (retained == null) {
+        children[entry.key] = entry.value;
+      } else {
+        retained.replaceFrom(entry.value);
+      }
+    }
+  }
 
   String get kind {
     if (selectedKind != null) {

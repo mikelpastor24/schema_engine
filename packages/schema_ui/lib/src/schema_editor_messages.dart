@@ -33,14 +33,20 @@ class SchemaEditorMessages {
   /// The schema type selector label.
   String get type => 'Type';
 
-  /// The required property switch label.
+  /// The required property option label.
   String get required => 'Required';
 
-  /// The nullable type switch label.
+  /// The nullable type option label.
   String get nullable => 'Allow null';
 
-  /// The constraints and annotations section heading.
-  String get settings => 'Constraints and annotations';
+  /// The less frequently used constraints and annotations section heading.
+  String get settings => 'More options';
+
+  /// The tab for constraints and the additional property policy.
+  String get validation => 'Validation';
+
+  /// The tab for schema metadata, default values, and examples.
+  String get annotations => 'Annotations';
 
   /// The array item schema heading.
   String get items => 'Item schema';
@@ -63,7 +69,7 @@ class SchemaEditorMessages {
   /// The additional property schema heading.
   String get additionalPropertySchema => 'Additional property schema';
 
-  /// The unique array items switch label.
+  /// The unique array items option label.
   String get uniqueItems => 'Unique items';
 
   /// The reusable definition selector label.

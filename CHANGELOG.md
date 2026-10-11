@@ -1,5 +1,11 @@
 ## Unreleased
 
+* Move schema options ahead of child properties and array items, and show
+  validation and annotations in separate tabs without discarding pending input.
+
+* Preserve schema editor expansion and visual scroll during external JSON
+  updates, and simplify property controls without duplicate name headings.
+
 * Add a Draft 2020-12 SchemaEditor with visual properties, types, constraints,
   formats, nested schemas, reusable definitions, and customizable messages.
 * Add a schema builder example with synchronized visual and editable JSON

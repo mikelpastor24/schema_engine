@@ -74,7 +74,13 @@ and formats, and create reusable definitions. Visual edits update the formatted
 JSON immediately after a valid change. Edit or paste a Draft 2020-12 schema
 in the JSON panel to replace the visual document, including nested properties,
 array items, and definitions. Unedited keywords without visual controls remain
-in the schema.
+in the schema. Entries group name and type without repeating the name in a
+heading. Common limits and formats are visible. **More options** sits before the
+schema's child properties and items, with **Validation** and **Annotations** tabs
+to show one group of settings at a time. JSON updates retain selected tabs and
+expanded sections at unchanged locations and keep the visual scroll position
+while the content
+still accommodates it.
 
 Malformed JSON, invalid keyword values, unresolved references, and older drafts
 show an error alongside the code while keeping the current visual document.

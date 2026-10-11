@@ -8,8 +8,13 @@ and Dart 3.13 or later. Original implementation, licensed under MIT.
 ## Create a schema visually
 
 Use `SchemaEditor` to author a Draft 2020-12 schema. Start with an empty object,
-add properties and definitions, choose their types, and expand **Constraints
-and annotations** to configure details. The editor emits immutable
+add properties and definitions, and choose their types. Each entry groups its
+name and type with compact required and nullable options. Common string limits,
+formats, and numeric bounds are immediately accessible. **More options** appears
+before child properties, array items, and definitions. Its **Validation** tab
+groups additional constraints and the additional property policy; **Annotations**
+groups metadata, defaults, and examples. Only the selected group is visible.
+The editor emits immutable
 `schema.JsonSchema` documents that can be serialized or passed to `SchemaForm`.
 
 ~~~dart
@@ -29,10 +34,17 @@ and `reset()` methods. Without a Form, `onChanged` still supplies valid schemas.
 Invalid input remains editable, makes the configuration invalid, and does not
 emit or save a replacement document. `onValidityChanged` lets an application
 disable export or explain why its last valid output has not changed. Keyword
-syntax and references are checked by the engine.
+syntax and references are checked by the engine. Fields in hidden option tabs
+still participate in Form validation and retain pending text when switching tabs.
 
 Pass an existing document as `schema:` to edit it. A different schema replaces
-the editor's document. Passing the exact `onChanged` result back into `schema`
+the editor's document while preserving open sections and selected option tabs
+at unchanged schema locations. Existing property and definition names identify
+their locations; renaming them in external JSON creates new entries. Updates
+refresh changed
+fields and retain unchanged controls, avoiding unnecessary scroll resets in a
+surrounding scroll view. If content shrinks, Flutter may clamp its scroll offset.
+Passing the exact `onChanged` result back into `schema`
 preserves active text, caret positions, and focus. This supports a code panel
 that parses a JSON edit and feeds the resulting document back into the editor.
 Root dialects other than Draft 2020-12 are rejected; no migration is performed.

@@ -28,6 +28,17 @@ Future<void> _open(WidgetTester tester, {double width = 1280}) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _annotations(WidgetTester tester, Finder options) async {
+  final bar = find.descendant(of: options, matching: find.byType(TabBar)).first;
+  final tab = find.descendant(
+    of: bar,
+    matching: find.widgetWithText(Tab, 'Annotations'),
+  );
+  await tester.ensureVisible(tab);
+  await tester.tap(tab);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets(
     'visual editor and JSON appear side by side and stay synchronized',
@@ -112,6 +123,64 @@ void main() {
     expect(result.compile().isValid({'enabled': true, 'extra': 1}), isFalse);
   });
 
+  testWidgets('JSON edits preserve visual scroll and expanded options', (
+    tester,
+  ) async {
+    await _open(tester);
+    await tester.ensureVisible(find.text('More options').first);
+    await tester.tap(find.text('More options').first);
+    await tester.pumpAndSettle();
+    await _annotations(tester, find.byType(ExpansionTile).first);
+    await tester.ensureVisible(find.text('More options').at(1));
+    await tester.tap(find.text('More options').at(1));
+    await tester.pumpAndSettle();
+    await _annotations(tester, find.byType(ExpansionTile).at(1));
+    expect(_field('Title'), findsNWidgets(2));
+    final scroll = tester
+        .widget<SingleChildScrollView>(
+          find.byKey(const ValueKey('schema-visual-scroll')),
+        )
+        .controller!;
+    scroll.jumpTo(250);
+    await tester.tap(_json);
+    await tester.pumpAndSettle();
+    final offset = scroll.offset;
+    expect(offset, greaterThan(0));
+
+    final document =
+        schema.decodeJson(_source(tester))! as Map<String, Object?>;
+    document['title'] = 'Account';
+    (document['properties']! as Map)['name'] = {
+      'type': 'string',
+      'minLength': 4,
+      'title': 'Full name',
+    };
+    final code = schema.encodeJson(document, indent: '  ');
+    await tester.enterText(_json, code);
+    await tester.pumpAndSettle();
+    expect(scroll.offset, closeTo(offset, 0.01));
+    expect(_field('Title'), findsNWidgets(2));
+    final titles = tester
+        .widgetList<TextField>(
+          find.descendant(
+            of: _field('Title'),
+            matching: find.byType(TextField),
+          ),
+        )
+        .map((field) => field.controller!.text);
+    expect(titles, ['Account', 'Full name']);
+    expect(_source(tester), code);
+
+    await tester.enterText(_json, '{"type":');
+    await tester.pumpAndSettle();
+    expect(scroll.offset, closeTo(offset, 0.01));
+    await tester.enterText(_json, code);
+    await tester.pumpAndSettle();
+    expect(scroll.offset, closeTo(offset, 0.01));
+    expect(_field('Title'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('malformed JSON and invalid schemas preserve the active editor', (
     tester,
   ) async {
@@ -163,7 +232,7 @@ void main() {
     await _open(tester);
     await tester.enterText(_json, '{"type":"number"}');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Constraints and annotations'));
+    await tester.tap(find.text('More options'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(_field('Minimum'));
     await tester.enterText(_field('Minimum'), '-');
@@ -192,8 +261,8 @@ void main() {
     await tester.pumpAndSettle();
     expect((schema.decodeJson(_source(tester)) as Map)['title'], 'Contact');
     expect(_field('Property name'), findsNWidgets(2));
-    await tester.ensureVisible(find.text('Constraints and annotations').first);
-    await tester.tap(find.text('Constraints and annotations').first);
+    await tester.ensureVisible(find.text('More options').first);
+    await tester.tap(find.text('More options').first);
     await tester.pumpAndSettle();
     await tester.ensureVisible(_field('Minimum properties'));
     await tester.enterText(_field('Minimum properties'), '-');

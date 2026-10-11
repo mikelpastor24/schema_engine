@@ -14,6 +14,7 @@ class SchemaBuilderScreen extends StatefulWidget {
 
 class _SchemaBuilderScreenState extends State<SchemaBuilderScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _visualScrollController = ScrollController();
   final _initial = schema.JsonSchema.build(
     type: schema.SchemaType.object,
     title: 'Contact',
@@ -49,6 +50,7 @@ class _SchemaBuilderScreenState extends State<SchemaBuilderScreen> {
 
   @override
   void dispose() {
+    _visualScrollController.dispose();
     _jsonController.dispose();
     super.dispose();
   }
@@ -92,6 +94,9 @@ class _SchemaBuilderScreenState extends State<SchemaBuilderScreen> {
   }
 
   void _reset() {
+    if (_visualScrollController.hasClients) {
+      _visualScrollController.jumpTo(0);
+    }
     setState(() {
       _editorRevision++;
       _schema = _initial;
@@ -148,6 +153,9 @@ class _SchemaBuilderScreenState extends State<SchemaBuilderScreen> {
                   children: [
                     Expanded(
                       child: SingleChildScrollView(
+                        key: const ValueKey('schema-visual-scroll'),
+                        controller: _visualScrollController,
+                        primary: false,
                         child: Form(
                           key: _formKey,
                           child: SchemaEditor(
